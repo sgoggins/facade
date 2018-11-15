@@ -50,7 +50,7 @@ html = html.parser.HTMLParser()
 # Important: Do not modify the database number unless you've also added an
 # update clause to update_db!
 
-upstream_db = 5
+upstream_db = 6
 
 #### Database update functions ####
 
@@ -153,7 +153,6 @@ def update_db(version):
 		cursor.execute(add_weekly_project_cache)
 		db.commit
 
-
 		add_weekly_repo_cache = ("CREATE TABLE IF NOT EXISTS repo_weekly_cache ("
 			"repos_id INT UNSIGNED NOT NULL,"
 			"email VARCHAR(128) NOT NULL,"
@@ -174,6 +173,25 @@ def update_db(version):
 		db.commit
 
 		increment_db(5)
+
+	if version < 6:
+
+		# As originally written, the UNIQUE wasn't working because it allowed
+		# multiple NULL values in end_date.
+
+		drop_special_tags_constraint = ("ALTER TABLE special_tags "
+			"DROP INDEX `email,start_date,end_date,tag`")
+
+		cursor.execute(drop_special_tags_constraint)
+		db.commit
+
+		add_unique_in_special_tags = ("ALTER TABLE special_tags "
+			"ADD UNIQUE `email,start_date,tag` (email,start_date,tag)")
+
+		cursor.execute(add_unique_in_special_tags)
+		db.commit
+
+		increment_db(6)
 
 	print("No further database updates.\n")
 
@@ -661,17 +679,37 @@ def git_repo_cleanup():
 		remove_analysis_data = "DELETE FROM analysis_data WHERE repos_id=%s"
 		cursor.execute(remove_analysis_data, (row['id'], ))
 
+		optimize_table = "OPTIMIZE TABLE analysis_data"
+		cursor.execute(optimize_table)
+		db.commit()
+
 		# Remove cached repo data
+
+		remove_repo_weekly_cache = "DELETE FROM repo_weekly_cache WHERE repos_id=%s"
+		cursor.execute(remove_repo_weekly_cache, (row['id'], ))
+		db.commit()
+
+		optimize_table = "OPTIMIZE TABLE repo_weekly_cache"
+		cursor.execute(optimize_table)
+		db.commit()
 
 		remove_repo_monthly_cache = "DELETE FROM repo_monthly_cache WHERE repos_id=%s"
 		cursor.execute(remove_repo_monthly_cache, (row['id'], ))
+		db.commit()
+
+		optimize_table = "OPTIMIZE TABLE repo_monthly_cache"
+		cursor.execute(optimize_table)
 		db.commit()
 
 		remove_repo_annual_cache = "DELETE FROM repo_annual_cache WHERE repos_id=%s"
 		cursor.execute(remove_repo_annual_cache, (row['id'], ))
 		db.commit()
 
-		# Set project to be recached
+		optimize_table = "OPTIMIZE TABLE repo_annual_cache"
+		cursor.execute(optimize_table)
+		db.commit()
+
+		# Set project to be recached if just removing a repo
 
 		set_project_recache = ("UPDATE projects SET recache=TRUE "
 			"WHERE id=%s")
@@ -701,6 +739,10 @@ def git_repo_cleanup():
 		cursor.execute(remove_logs, (row['id'], ))
 		db.commit()
 
+		optimize_table = "OPTIMIZE TABLE repos_fetch_log"
+		cursor.execute(optimize_table)
+		db.commit()
+
 		# Attempt to cleanup any empty parent directories
 
 		while (cleanup.find('/',0) > 0):
@@ -728,9 +770,35 @@ def git_repo_cleanup():
 		cursor.execute(clear_annual_cache, (project['id'], ))
 		db.commit()
 
+		optimize_table = "OPTIMIZE TABLE project_annual_cache"
+		cursor.execute(optimize_table)
+		db.commit()
+
 		clear_monthly_cache = ("DELETE FROM project_monthly_cache WHERE "
 			"projects_id=%s")
 		cursor.execute(clear_monthly_cache, (project['id'], ))
+		db.commit()
+
+		optimize_table = "OPTIMIZE TABLE project_monthly_cache"
+		cursor.execute(optimize_table)
+		db.commit()
+
+		clear_weekly_cache = ("DELETE FROM project_weekly_cache WHERE "
+			"projects_id=%s")
+		cursor.execute(clear_weekly_cache, (project['id'], ))
+		db.commit()
+
+		optimize_table = "OPTIMIZE TABLE project_weekly_cache"
+		cursor.execute(optimize_table)
+		db.commit()
+
+		clear_unknown_cache = ("DELETE FROM unknown_cache WHERE "
+			"projects_id=%s")
+		cursor.execute(clear_unknown_cache, (project['id'], ))
+		db.commit()
+
+		optimize_table = "OPTIMIZE TABLE project_weekly_cache"
+		cursor.execute(optimize_table)
 		db.commit()
 
 		# Remove any projects which were also marked for deletion
@@ -1517,6 +1585,12 @@ def rebuild_unknown_affiliation_and_web_caches():
 
 	# Clear stale caches
 
+	clear_project_weekly_cache = ("DELETE c.* FROM project_weekly_cache c "
+		"JOIN projects p ON c.projects_id = p.id WHERE "
+		"p.recache=TRUE")
+	cursor.execute(clear_project_weekly_cache)
+	db.commit()
+
 	clear_project_monthly_cache = ("DELETE c.* FROM project_monthly_cache c "
 		"JOIN projects p ON c.projects_id = p.id WHERE "
 		"p.recache=TRUE")
@@ -1527,6 +1601,13 @@ def rebuild_unknown_affiliation_and_web_caches():
 		"JOIN projects p ON c.projects_id = p.id WHERE "
 		"p.recache=TRUE")
 	cursor.execute(clear_project_annual_cache)
+	db.commit()
+
+	clear_repo_weekly_cache = ("DELETE c.* FROM repo_weekly_cache c "
+		"JOIN repos r ON c.repos_id = r.id "
+		"JOIN projects p ON r.projects_id = p.id WHERE "
+		"p.recache=TRUE")
+	cursor.execute(clear_repo_weekly_cache)
 	db.commit()
 
 	clear_repo_monthly_cache = ("DELETE c.* FROM repo_monthly_cache c "
