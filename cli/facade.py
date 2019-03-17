@@ -28,6 +28,21 @@
 # add_tag(email,start_date,end_date,tag,db,cursor)
 # delete_tag(tag_id,db,cursor)
 #
+## Dependencies
+# ## Ubuntu 14, Ubuntu 16, Debian 8.6 (jessie)
+# sudo apt-get install python-pip python-dev libmysqlclient-dev
+# ## Fedora 24:
+# sudo dnf install python python-devel mysql-devel redhat-rpm-config gcc
+# ## Mac OSX
+# brew install mysql-connector-c
+# ##if that fails on OSX, try
+# brew install mysql
+# pip install mysql-connector-python
+# pip install -U setuptools
+# pip install mysqlclient 
+		# From: https://pypi.org/project/mysqlclient/
+
+
 
 import sys
 import os
@@ -215,16 +230,24 @@ def add_tag(email,start_date,end_date,tag,db,cursor):
 	#
 	# email: Email address to be tagged
 	# start_date: A string in YYYY-MM-DD indicating when the tagging should begin
-	# end_date: A string in YYYY-MM-DD indicating when tagging should end. 9999-12-31 if no end date.
+	# end_date: A string in YYYY-MM-DD indicating when tagging should end. Empty if no end date.
 	# tag: A string with the tag name
 	# db: A database connection object
 	# cursor: A database cursor
 
-	insert_tag = ("INSERT IGNORE INTO special_tags "
-		"(email,start_date,end_date,tag) VALUES (%s,%s,%s,%s)")
+	if end_date:
+		add_tag = ("INSERT IGNORE INTO special_tags "
+			"(email,start_date,end_date,tag) VALUES (%s,%s,%s,%s)")
 
-	cursor.execute(insert_tag, (email,start_date,end_date,tag))
-	db.commit()
+		cursor.execute(add_tag, (email,start_date,end_date,tag))
+		db.commit()
+
+	else:
+		add_tag = ("INSERT IGNORE INTO special_tags "
+			"(email,start_date,tag) VALUES (%s,%s,%s)")
+
+		cursor.execute(add_tag, (email,start_date,tag))
+		db.commit()
 
 def delete_tag(tag_id,db,cursor):
 
@@ -1827,10 +1850,9 @@ def _tags():
 				print("\nInvalid date\n")
 				continue
 
-			end_date = input(" Stop tagging on this date (optional): "
-				"(YYYY-MM-DD) ").strip() or '9999-12-31'
+			end_date = input(" Stop tagging on this date (optional): (YYYY-MM-DD) ").strip()
 
-			if not (end_date == '9999-12-31' or (len(end_date) == 10 and
+			if not (len(end_date) == 0 or (len(end_date) == 10 and
 				re.match('([12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]))',end_date))):
 
 				print("\nInvalid date\n")
@@ -2617,12 +2639,12 @@ def _configuration():
 
 								else:
 									add_tag = ("INSERT INTO special_tags "
-										"(email,start_date,end_date,tag) VALUES "
+										"(email,start_date,tag) VALUES "
 										"(%s,%s,%s) "
 										"ON DUPLICATE KEY UPDATE email=email")
 
 									cursor.execute(add_tag,(line[0], line[1],
-										'9999-12-31', line[3]))
+										line[3]))
 									db.commit()
 
 					if not safe:
