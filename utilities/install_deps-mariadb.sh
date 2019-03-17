@@ -13,7 +13,7 @@ in any missing packages, should you change your mind later:
 Installing any missing dependencies...
 "
 
-sudo apt-get install mysql-client mariadb-server \
+sudo apt-get install mariadb-server \
 python3 python3-mysqldb python3-bcrypt python3-xlsxwriter python3-texttable
 
 echo "
