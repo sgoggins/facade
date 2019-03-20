@@ -41,8 +41,8 @@ import configparser
 if platform.python_implementation() == 'PyPy':
 	import pymysql
 else:
-	import MySQLdb
-
+#	import MySQLdb
+        import mysqlclient
 global log_level
 
 html = html.parser.HTMLParser()

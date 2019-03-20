@@ -13,8 +13,10 @@ in any missing packages, should you change your mind later:
 Installing any missing dependencies...
 "
 
-sudo apt-get install mariadb-server \
+sudo apt-get install mariadb-server  \
 python3 python3-mysqldb python3-bcrypt python3-xlsxwriter python3-texttable
+
+pip install mysql-connector-python
 
 echo "
 If everything went well, your next step is to run setup:
