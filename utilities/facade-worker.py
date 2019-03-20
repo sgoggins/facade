@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 # Copyright 2016-2018 Brian Warner
 #
@@ -41,8 +41,8 @@ import configparser
 if platform.python_implementation() == 'PyPy':
 	import pymysql
 else:
-#	import MySQLdb
-        import mysqlclient
+	import MySQLdb
+#        import mysqlclient
 global log_level
 
 html = html.parser.HTMLParser()
