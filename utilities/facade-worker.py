@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/envpython3
 
 # Copyright 2016-2018 Brian Warner
 #
