@@ -42,7 +42,7 @@ if platform.python_implementation() == 'PyPy':
 	import pymysql
 else:
 	import MySQLdb
-#        import mysqlclient
+
 global log_level
 
 html = html.parser.HTMLParser()
@@ -272,7 +272,8 @@ def database_connection(db_host,db_user,db_pass,db_name):
 			user = db_user,
 			passwd = db_pass,
 			db = db_name,
-			charset = 'utf8mb4')
+			charset = 'utf8mb4',
+			connect_timeout = 31536000)
 
 		cursor = db.cursor(pymysql.cursors.DictCursor)
 
@@ -283,7 +284,8 @@ def database_connection(db_host,db_user,db_pass,db_name):
 			user = db_user,
 			passwd = db_pass,
 			db = db_name,
-			charset = 'utf8mb4')
+			charset = 'utf8mb4',
+			connect_timeout = 31536000)
 
 		cursor = db.cursor(MySQLdb.cursors.DictCursor)
 
