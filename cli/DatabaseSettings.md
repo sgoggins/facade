@@ -1,28 +1,29 @@
-SET GLOBAL connect_timeout = 280;
+SET GLOBAL connect_timeout = 280000;
 SET GLOBAL deadlock_timeout_short = 100000;
 SET GLOBAL deadlock_timeout_long = 50000000;
-SET GLOBAL delayed_insert_timeout = 12000;
-SET GLOBAL innodb_lock_wait_timeout = 2000;
+SET GLOBAL delayed_insert_timeout = 120000;
+SET GLOBAL innodb_lock_wait_timeout = 200000;
 SET GLOBAL lock_wait_timeout = 150000;
 SET GLOBAL interactive_timeout = 86500;
-SET GLOBAL net_read_timeout = 300;
-SET GLOBAL net_write_timeout = 500;
-SET GLOBAL slave_net_timeout = 400;
-SET GLOBAL wait_timeout = 150000;
+SET GLOBAL net_read_timeout = 30000;
+SET GLOBAL net_write_timeout = 50000;
+SET GLOBAL slave_net_timeout = 40000;
+SET GLOBAL wait_timeout = 1500000;
 SET GLOBAL innodb_buffer_pool_size = 107374182400;
+SET GLOBAL thread_pool_idle_timeout = 40000;
 
-
-connect_timeout = 280
+thread_pool_idle_timeout = 40000
+connect_timeout = 280000
 deadlock_timeout_short = 100000
 deadlock_timeout_long = 50000000
-delayed_insert_timeout = 12000
-innodb_lock_wait_timeout = 2000
+delayed_insert_timeout = 120000
+innodb_lock_wait_timeout = 200000
 lock_wait_timeout = 150000
 interactive_timeout = 86500
-net_read_timeout = 300
-net_write_timeout = 500		
-slave_net_timeout = 400
-wait_timeout = 150000
+net_read_timeout = 30000
+net_write_timeout = 50000	
+slave_net_timeout = 40000
+wait_timeout = 1500000
 innodb_buffer_pool_size = 107374182400
 
 
