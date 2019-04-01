@@ -915,13 +915,13 @@ def git_repo_initialize():
 			# circumstances caches are rebuilt only once per waiting period.
 
 			update_project_status = ("UPDATE repos SET status='Update' WHERE "
-				"projects_id=%s")
+				"projects_id=%s AND status != 'Empty'")
 			cursor.execute(update_project_status, (row['projects_id'], ))
 			db.commit()
 
 			# Since we just cloned the new repo, set it straight to analyze.
 			query = ("UPDATE repos SET status='Analyze',path=%s, name=%s "
-				"WHERE id=%s")
+				"WHERE id=%s and status != 'Empty'")
 
 			cursor.execute(query, (repo_relative_path,repo_name,row["id"]))
 			db.commit()
@@ -975,7 +975,7 @@ def check_for_repo_updates():
 		if cursor.rowcount == 0:
 			mark_repo = ("UPDATE repos r JOIN projects p ON p.id = r.projects_id "
 				"SET status='Update' WHERE "
-				"r.id=%s ")
+				"r.id=%s and r.status != 'Empty'")
 			cursor.execute(mark_repo, (repo['id'], ))
 			db.commit()
 
@@ -984,7 +984,7 @@ def check_for_repo_updates():
 
 	update_project_status = ("UPDATE repos r LEFT JOIN repos s ON r.projects_id=s.projects_id "
 		"SET r.status='Update' WHERE s.status='Update' AND "
-		"r.status != 'Analyze'")
+		"r.status != 'Analyze' AND r.status != 'Empty'")
 	cursor.execute(update_project_status)
 	db.commit()
 
@@ -1219,7 +1219,7 @@ def analysis():
 
 			trim_commit(repo['id'],commit)
 
-		set_complete = "UPDATE repos SET status='Complete' WHERE id=%s"
+		set_complete = "UPDATE repos SET status='Complete' WHERE id=%s and status != 'Empty'"
 
 		cursor.execute(set_complete, (repo['id'], ))
 
