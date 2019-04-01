@@ -11,6 +11,12 @@ SET GLOBAL slave_net_timeout = 40000;
 SET GLOBAL wait_timeout = 1500000;
 SET GLOBAL innodb_buffer_pool_size = 107374182400;
 SET GLOBAL thread_pool_idle_timeout = 40000;
+SET GLOBAL tmp_table_size = 16106127360;
+SET GLOBAL max_heap_table_size = 16106127360;
+
+
+tmp_table_size = 16106127360
+max_heap_table_size = 16106127360
 
 thread_pool_idle_timeout = 40000
 connect_timeout = 280000
