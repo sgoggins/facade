@@ -954,7 +954,7 @@ def check_for_repo_updates():
 
 	get_initialized_repos = ("SELECT id FROM repos WHERE status NOT LIKE 'New%' "
 		"AND status != 'Delete' "
-		"AND status != 'Analyze'")
+		"AND status != 'Analyze' AND status != 'Empty'")
 	cursor.execute(get_initialized_repos)
 	repos = list(cursor)
 
@@ -998,7 +998,7 @@ def force_repo_updates():
 	log_activity('Info','Forcing repos to update')
 
 	get_repo_ids = ("UPDATE repos SET status='Update' WHERE status "
-		"NOT LIKE 'New%' AND STATUS!='Delete'")
+		"NOT LIKE 'New%' AND STATUS!='Delete' AND STATUS !='Empty'")
 	cursor.execute(get_repo_ids)
 	db.commit()
 
@@ -1012,7 +1012,7 @@ def force_repo_analysis():
 	log_activity('Info','Forcing repos to be analyzed')
 
 	set_to_analyze = ("UPDATE repos SET status='Analyze' WHERE status "
-		"NOT LIKE 'New%' AND STATUS!='Delete'")
+		"NOT LIKE 'New%' AND STATUS!='Delete' AND STATUS != 'Empty'")
 	cursor.execute(set_to_analyze)
 	db.commit()
 
