@@ -15,3 +15,5 @@ db.py
 *.xlsx
 git-repos
 *.cfg
+*.log
+*.err
