@@ -57,7 +57,6 @@ DROP TABLE `unknown_cache`;
 DROP TABLE `utility_log`;
 DROP TABLE `working_commits`;
 
-
 CREATE TABLE `affiliations` (
 `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
 `domain` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -73,7 +72,7 @@ ENGINE = InnoDB
 AUTO_INCREMENT = 522
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_unicode_ci
-ROW_FORMAT = dynamic;
+ROW_FORMAT = compact;
 CREATE TABLE `aliases` (
 `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
 `canonical` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -88,14 +87,14 @@ ENGINE = InnoDB
 AUTO_INCREMENT = 14
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_unicode_ci
-ROW_FORMAT = dynamic;
+ROW_FORMAT = compact;
 CREATE TABLE `analysis_data` (
 `repos_id` int(10) UNSIGNED NOT NULL,
 `commit` varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
 `author_name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
 `author_raw_email` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
 `author_email` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-`author_date` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+`author_date` varchar(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
 `author_affiliation` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT 'NULL',
 `committer_name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
 `committer_raw_email` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -119,7 +118,7 @@ ENGINE = InnoDB
 AUTO_INCREMENT = 0
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_unicode_ci
-ROW_FORMAT = dynamic;
+ROW_FORMAT = compact;
 CREATE TABLE `analysis_log` (
 `repos_id` int(10) UNSIGNED NOT NULL,
 `status` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -130,7 +129,7 @@ ENGINE = InnoDB
 AUTO_INCREMENT = 0
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_unicode_ci
-ROW_FORMAT = dynamic;
+ROW_FORMAT = compact;
 CREATE TABLE `auth` (
 `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
 `user` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -145,7 +144,7 @@ ENGINE = InnoDB
 AUTO_INCREMENT = 2
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_unicode_ci
-ROW_FORMAT = dynamic;
+ROW_FORMAT = compact;
 CREATE TABLE `auth_history` (
 `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
 `user` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -157,7 +156,7 @@ ENGINE = InnoDB
 AUTO_INCREMENT = 30
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_unicode_ci
-ROW_FORMAT = dynamic;
+ROW_FORMAT = compact;
 CREATE TABLE `exclude` (
 `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
 `projects_id` int(10) UNSIGNED NOT NULL,
@@ -169,7 +168,7 @@ ENGINE = InnoDB
 AUTO_INCREMENT = 1
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_unicode_ci
-ROW_FORMAT = dynamic;
+ROW_FORMAT = compact;
 CREATE TABLE `project_annual_cache` (
 `projects_id` int(10) UNSIGNED NOT NULL,
 `email` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -187,7 +186,7 @@ ENGINE = InnoDB
 AUTO_INCREMENT = 0
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_unicode_ci
-ROW_FORMAT = dynamic;
+ROW_FORMAT = compact;
 CREATE TABLE `project_monthly_cache` (
 `projects_id` int(10) UNSIGNED NOT NULL,
 `email` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -208,7 +207,7 @@ ENGINE = InnoDB
 AUTO_INCREMENT = 0
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_unicode_ci
-ROW_FORMAT = dynamic;
+ROW_FORMAT = compact;
 CREATE TABLE `project_weekly_cache` (
 `projects_id` int(10) UNSIGNED NOT NULL,
 `email` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -229,21 +228,21 @@ ENGINE = InnoDB
 AUTO_INCREMENT = 0
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_unicode_ci
-ROW_FORMAT = dynamic;
+ROW_FORMAT = compact;
 CREATE TABLE `projects` (
 `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
-`name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-`description` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT 'NULL',
-`website` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT 'NULL',
+`name` varchar(128) NOT NULL,
+`description` varchar(256) NULL DEFAULT NULL,
+`website` varchar(128) NULL DEFAULT NULL,
 `recache` tinyint(1) NULL DEFAULT 1,
-`last_modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+`last_modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP,
 PRIMARY KEY (`id`) 
 )
 ENGINE = InnoDB
-AUTO_INCREMENT = 20
-DEFAULT CHARACTER SET = utf8mb4
-COLLATE = utf8mb4_unicode_ci
-ROW_FORMAT = dynamic;
+AUTO_INCREMENT = 294
+DEFAULT CHARACTER SET = latin1
+COLLATE = latin1_swedish_ci
+ROW_FORMAT = compact;
 CREATE TABLE `repo_annual_cache` (
 `repos_id` int(10) UNSIGNED NOT NULL,
 `email` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -261,7 +260,7 @@ ENGINE = InnoDB
 AUTO_INCREMENT = 0
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_unicode_ci
-ROW_FORMAT = dynamic;
+ROW_FORMAT = compact;
 CREATE TABLE `repo_monthly_cache` (
 `repos_id` int(10) UNSIGNED NOT NULL,
 `email` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -282,7 +281,7 @@ ENGINE = InnoDB
 AUTO_INCREMENT = 0
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_unicode_ci
-ROW_FORMAT = dynamic;
+ROW_FORMAT = compact;
 CREATE TABLE `repo_weekly_cache` (
 `repos_id` int(10) UNSIGNED NOT NULL,
 `email` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -303,22 +302,22 @@ ENGINE = InnoDB
 AUTO_INCREMENT = 0
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_unicode_ci
-ROW_FORMAT = dynamic;
+ROW_FORMAT = compact;
 CREATE TABLE `repos` (
 `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
 `projects_id` int(10) UNSIGNED NOT NULL,
-`git` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-`path` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT 'NULL',
-`name` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT 'NULL',
-`added` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-`status` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+`git` varchar(256) NOT NULL,
+`path` varchar(256) NULL DEFAULT NULL,
+`name` varchar(256) NULL DEFAULT NULL,
+`added` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+`status` varchar(32) NOT NULL,
 PRIMARY KEY (`id`) 
 )
 ENGINE = InnoDB
-AUTO_INCREMENT = 22069
-DEFAULT CHARACTER SET = utf8mb4
-COLLATE = utf8mb4_unicode_ci
-ROW_FORMAT = dynamic;
+AUTO_INCREMENT = 17048
+DEFAULT CHARACTER SET = latin1
+COLLATE = latin1_swedish_ci
+ROW_FORMAT = compact;
 CREATE TABLE `repos_fetch_log` (
 `repos_id` int(10) UNSIGNED NOT NULL,
 `status` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -329,19 +328,19 @@ ENGINE = InnoDB
 AUTO_INCREMENT = 0
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_unicode_ci
-ROW_FORMAT = dynamic;
+ROW_FORMAT = compact;
 CREATE TABLE `settings` (
 `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
 `setting` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
 `value` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-`last_modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+`last_modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP,
 PRIMARY KEY (`id`) 
 )
 ENGINE = InnoDB
-AUTO_INCREMENT = 17
+AUTO_INCREMENT = 14
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_unicode_ci
-ROW_FORMAT = dynamic;
+ROW_FORMAT = compact;
 CREATE TABLE `special_tags` (
 `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
 `email` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -355,7 +354,7 @@ ENGINE = InnoDB
 AUTO_INCREMENT = 1
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_unicode_ci
-ROW_FORMAT = dynamic;
+ROW_FORMAT = compact;
 CREATE TABLE `unknown_cache` (
 `type` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
 `projects_id` int(10) UNSIGNED NOT NULL,
@@ -368,7 +367,7 @@ ENGINE = InnoDB
 AUTO_INCREMENT = 0
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_unicode_ci
-ROW_FORMAT = dynamic;
+ROW_FORMAT = compact;
 CREATE TABLE `utility_log` (
 `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
 `level` varchar(8) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -377,10 +376,10 @@ CREATE TABLE `utility_log` (
 PRIMARY KEY (`id`) 
 )
 ENGINE = InnoDB
-AUTO_INCREMENT = 5001949
+AUTO_INCREMENT = 1
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_unicode_ci
-ROW_FORMAT = dynamic;
+ROW_FORMAT = compact;
 CREATE TABLE `working_commits` (
 `repos_id` int(10) UNSIGNED NOT NULL,
 `working_commit` varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT 'NULL'
@@ -389,5 +388,4 @@ ENGINE = InnoDB
 AUTO_INCREMENT = 0
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_unicode_ci
-ROW_FORMAT = dynamic;
-
+ROW_FORMAT = compact;
