@@ -534,7 +534,7 @@ def analyze_commit(repo_id,repo_loc,commit):
 				continue
 
 			if line.find('author_date:') == 0:
-				author_date = line[12:22]
+				author_date = line[12:]
 				continue
 
 			if line.find('committer_name:') == 0:
@@ -546,7 +546,7 @@ def analyze_commit(repo_id,repo_loc,commit):
 				continue
 
 			if line.find('committer_date:') == 0:
-				committer_date = line[16:26]
+				committer_date = line[16:]
 				continue
 
 			if line.find('parents:') == 0:
