@@ -507,6 +507,7 @@ def analyze_commit(repo_id,repo_loc,commit):
 
 	git_log = subprocess.Popen(["git --git-dir %s log -p -M %s -n1 "
 		"--pretty=format:'"
+		"--date=iso"
 		"author_name: %%an%%nauthor_email: %%ae%%nauthor_date:%%at%%n"
 		"committer_name: %%cn%%ncommitter_email: %%ce%%ncommitter_date: %%ct%%n"
 		"parents: %%p%%nEndPatch' "
