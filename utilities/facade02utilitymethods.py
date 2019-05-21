@@ -36,6 +36,10 @@ import os
 import getopt
 import xlsxwriter
 import configparser
+if platform.python_implementation() == 'PyPy':
+	import pymysql
+else:
+	import MySQLdb
 
 
 def update_repo_log(repos_id,status):

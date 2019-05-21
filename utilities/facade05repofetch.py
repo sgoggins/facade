@@ -36,7 +36,10 @@ import os
 import getopt
 import xlsxwriter
 import configparser
-
+if platform.python_implementation() == 'PyPy':
+	import pymysql
+else:
+	import MySQLdb
 
 def git_repo_initialize():
 

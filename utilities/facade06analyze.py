@@ -36,7 +36,11 @@ import os
 import getopt
 import xlsxwriter
 import configparser
-
+if platform.python_implementation() == 'PyPy':
+	import pymysql
+else:
+	import MySQLdb
+	
 def analysis():
 
 # Run the analysis by looping over all active repos. For each repo, we retrieve

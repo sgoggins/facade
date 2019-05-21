@@ -35,6 +35,10 @@ import getopt
 import xlsxwriter
 import configparser
 import pymysql
+if platform.python_implementation() == 'PyPy':
+	import pymysql
+else:
+	import MySQLdb
 
 # Important: Do not modify the database number unless you've also added an
 # update clause to update_db!
