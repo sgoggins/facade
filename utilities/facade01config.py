@@ -34,6 +34,7 @@ import os
 import getopt
 import xlsxwriter
 import configparser
+import pymysql
 
 # Important: Do not modify the database number unless you've also added an
 # update clause to update_db!
