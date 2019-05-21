@@ -39,13 +39,13 @@ import getopt
 import xlsxwriter
 import configparser
 
-from facade01config.py import increment_db, update_db, migrate_database_config, database_connection, get_setting, update_status, log_activity          
-from facade02utilitymethods.py import update_repo_log, trim_commit, store_working_author, trim_author   
-from facade03analyzecommit.py import analyze_commit
-from facade04postanalysiscleanup.py import git_repo_cleanup
-from facade05repofetch.py import git_repo_initialize, check_for_repo_updates, force_repo_updates, force_repo_analysis, git_repo_updates
-from facade06analyze.py import analysis
-from facade07rebuildcache.py import nuke_affiliations, fill_empty_affiliations, invalidate_caches, rebuild_unknown_affiliation_and_web_caches
+from facade01config import increment_db, update_db, migrate_database_config, database_connection, get_setting, update_status, log_activity          
+from facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author   
+from facade03analyzecommit import analyze_commit
+from facade04postanalysiscleanup import git_repo_cleanup
+from facade05repofetch import git_repo_initialize, check_for_repo_updates, force_repo_updates, force_repo_analysis, git_repo_updates
+from facade06analyze import analysis
+from facade07rebuildcache import nuke_affiliations, fill_empty_affiliations, invalidate_caches, rebuild_unknown_affiliation_and_web_caches
 
 
 
