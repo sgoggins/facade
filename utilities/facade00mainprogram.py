@@ -265,7 +265,7 @@ if force_analysis:
 	force_repo_analysis(cfg)
 
 if not limited_run or (limited_run and run_analysis):
-	analysis(cfg)
+	analysis(cfg, multithreaded)
 
 if nuke_stored_affiliations:
 	nuke_affiliations(cfg)

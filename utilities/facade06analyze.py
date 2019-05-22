@@ -41,7 +41,7 @@ if platform.python_implementation() == 'PyPy':
 else:
 	import MySQLdb
 	
-def analysis(cfg):
+def analysis(cfg, multithreaded):
 
 # Run the analysis by looping over all active repos. For each repo, we retrieve
 # the list of commits which lead to HEAD. If any are missing from the database,
@@ -91,7 +91,7 @@ def analysis(cfg):
 		# If there's a commit still there, the previous run was interrupted and
 		# the commit data may be incomplete. It should be trimmed, just in case.
 		for commit in working_commits:
-			trim_commit(repo['id'],commit['working_commit'])
+			trim_commit(cfg, repo['id'],commit['working_commit'])
 
 			# Remove the working commit.
 			remove_commit = ("DELETE FROM working_commits "
@@ -170,7 +170,7 @@ def analysis(cfg):
 
 		for commit in trimmed_commits:
 
-			trim_commit(repo['id'],commit)
+			trim_commit(cfg, repo['id'],commit)
 
 		set_complete = "UPDATE repos SET status='Complete' WHERE id=%s and status != 'Empty'"
 
