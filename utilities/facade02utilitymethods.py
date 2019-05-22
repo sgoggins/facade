@@ -99,7 +99,7 @@ def trim_author(cfg, email):
 	cfg.cursor.execute(trim, (email, ))
 	cfg.db.commit()
 
-	store_working_author('done')
+	store_working_author(cfg, 'done')
 
 	cfg.log_activity('Debug','Trimmed working author: %s' % email)
 
