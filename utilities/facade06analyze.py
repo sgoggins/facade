@@ -105,7 +105,7 @@ def analysis(cfg):
 
 		update_analysis_log(repo['id'],'Collecting data')
 
-		repo_loc = ('%s%s/%s%s/.git' % (repo_base_directory,
+		repo_loc = ('%s%s/%s%s/.git' % (cfg.repo_base_directory,
 			repo["projects_id"], repo["path"],
 			repo["name"]))
 		# Grab the parents of HEAD

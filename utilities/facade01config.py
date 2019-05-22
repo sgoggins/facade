@@ -56,6 +56,8 @@ class Config:
 		self.db = None
 		self.db_people = None
 
+		self.repo_base_directory = self.get_setting('repo_directory')
+
 	#### Database update functions ####
 
 	def increment_db(self, version):
@@ -315,6 +317,7 @@ class Config:
 		query = ("SELECT value FROM settings WHERE setting=%s ORDER BY "
 			"last_modified DESC LIMIT 1")
 		self.cursor.execute(query, (setting, ))
+
 		return self.cursor.fetchone()["value"]
 
 	def update_status(self, status):

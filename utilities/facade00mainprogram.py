@@ -226,7 +226,7 @@ for opt in opts:
 		cfg.log_activity('Info','Option set: creating Excel summary files.')
 
 # Get the location of the directory where git repos are stored
-repo_base_directory = cfg.get_setting('repo_directory')
+repo_base_directory = cfg.repo_base_directory
 
 # Determine if it's safe to start the script
 current_status = cfg.get_setting('utility_status')
