@@ -68,7 +68,7 @@ def git_repo_initialize(cfg):
 
         # Get the full path to the directory where we'll clone the repo
         repo_path = ('%s%s/%s' %
-            (repo_base_directory,row["projects_id"],repo_relative_path))
+            (cfg.repo_base_directory,row["projects_id"],repo_relative_path))
 
         # Get the name of repo
         repo_name = git[git.rfind('/',0)+1:]
@@ -242,7 +242,7 @@ def git_repo_updates(cfg):
     cfg.update_status('Updating repos')
     cfg.log_activity('Info','Updating existing repos')
 
-    repo_base_directory = cfg.get_setting('repo_directory')
+    cfg.repo_base_directory = cfg.get_setting('repo_directory')
 
     query = ("SELECT id,projects_id,git,name,path FROM repos WHERE "
         "status='Update'");
@@ -264,7 +264,7 @@ def git_repo_updates(cfg):
         while attempt < 2:
 
             cmd = ("git -C %s%s/%s%s pull"
-                % (repo_base_directory,row['projects_id'],row['path'],row['name']))
+                % (cfg.repo_base_directory,row['projects_id'],row['path'],row['name']))
 
             return_code = subprocess.Popen([cmd],shell=True).wait()
 
@@ -279,12 +279,12 @@ def git_repo_updates(cfg):
                     'clean for %s' % row['git'])
 
                 cmd_reset = ("git -C %s%s/%s%s reset --hard origin/master"
-                    % (repo_base_directory,row['projects_id'],row['path'],row['name']))
+                    % (cfg.repo_base_directory,row['projects_id'],row['path'],row['name']))
 
                 return_code_reset = subprocess.Popen([cmd_reset],shell=True).wait()
 
                 cmd_clean = ("git -C %s%s/%s%s clean -df"
-                    % (repo_base_directory,row['projects_id'],row['path'],row['name']))
+                    % (cfg.repo_base_directory,row['projects_id'],row['path'],row['name']))
 
                 return_code_clean = subprocess.Popen([cmd_clean],shell=True).wait()
 

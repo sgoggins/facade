@@ -48,7 +48,7 @@ def git_repo_cleanup(cfg):
 	cfg.update_status('Purging deleted repos')
 	cfg.log_activity('Info','Processing deletions')
 
-	repo_base_directory = cfg.get_setting('repo_directory')
+	cfg.repo_base_directory = cfg.get_setting('repo_directory')
 
 	query = "SELECT id,projects_id,path,name FROM repos WHERE status='Delete'"
 	cfg.cursor.execute(query)
@@ -60,7 +60,7 @@ def git_repo_cleanup(cfg):
 		# Remove the files on disk
 
 		cmd = ("rm -rf %s%s/%s%s"
-			% (repo_base_directory,row['projects_id'],row['path'],row['name']))
+			% (cfg.repo_base_directory,row['projects_id'],row['path'],row['name']))
 
 		return_code = subprocess.Popen([cmd],shell=True).wait()
 
@@ -138,7 +138,7 @@ def git_repo_cleanup(cfg):
 		while (cleanup.find('/',0) > 0):
 			cleanup = cleanup[:cleanup.rfind('/',0)]
 
-			cmd = "rmdir %s%s" % (repo_base_directory,cleanup)
+			cmd = "rmdir %s%s" % (cfg.repo_base_directory,cleanup)
 			subprocess.Popen([cmd],shell=True).wait()
 			log_activity('Verbose','Attempted %s' % cmd)
 
