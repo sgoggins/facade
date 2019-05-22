@@ -56,7 +56,7 @@ class Config:
 		self.db = None
 		self.db_people = None
 
-		self.repo_base_directory = self.get_setting('repo_directory')
+		self.repo_base_directory = None
 
 	#### Database update functions ####
 
@@ -306,6 +306,7 @@ class Config:
 		
 		# Figure out how much we're going to log
 		self.log_level = self.get_setting('log_level')
+		self.repo_base_directory = self.get_setting('repo_directory')
 
 		return db, cursor
 		
