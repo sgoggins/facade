@@ -99,7 +99,7 @@ def fill_empty_affiliations(cfg):
 			"ORDER BY start_date DESC")
 
 		cfg.cursor_people.execute(find_exact_match, (email, ))
-		db_people.commit
+		cfg.db_people.commit()
 
 		matches = list(cfg.cursor_people)
 
@@ -124,7 +124,7 @@ def fill_empty_affiliations(cfg):
 				"ORDER BY start_date DESC")
 
 			cfg.cursor_people.execute(find_exact_domain, (domain, ))
-			db_people.commit()
+			cfg.db_people.commit()
 
 			matches = list(cfg.cursor_people)
 
@@ -139,7 +139,7 @@ def fill_empty_affiliations(cfg):
 				"ORDER BY start_date DESC")
 
 			cfg.cursor_people.execute(find_domain, (domain[domain.rfind('.',0,domain.rfind('.',0))+1:], ))
-			db_people.commit()
+			cfg.db_people.commit()
 
 			matches = list(cfg.cursor_people)
 
@@ -177,7 +177,7 @@ def fill_empty_affiliations(cfg):
 			"AND active = TRUE")
 
 		cfg.cursor_people.execute(fetch_canonical, (email, ))
-		db_people.commit()
+		cfg.db_people.commit()
 
 		canonical = list(cfg.cursor_people)
 
