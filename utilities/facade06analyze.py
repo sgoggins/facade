@@ -37,6 +37,7 @@ import getopt
 import xlsxwriter
 import configparser
 from facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author
+from facade03analyzecommit import analyze_commit
 
 if platform.python_implementation() == 'PyPy':
 	import pymysql
@@ -150,14 +151,14 @@ def analysis(cfg, multithreaded):
 
 			for commit in missing_commits:
 
-				result =pool.apply_async(analyze_commit,(repo['id'],repo_loc,commit))
+				result = pool.apply_async(analyze_commit(cfg, repo['id'], repo_loc, commit, multithreaded))
 
 			pool.close()
 			pool.join()
 
 		else:
 			for commit in missing_commits:
-				analyze_commit(repo['id'],repo_loc,commit)
+				analyze_commit(cfg, repo['id'], repo_loc, commit, multithreaded)
 
 		update_analysis_log(repo['id'],'Data collection complete')
 

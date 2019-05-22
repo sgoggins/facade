@@ -42,7 +42,7 @@ else:
 	import MySQLdb
 
 
-def analyze_commit(db, repo_id,repo_loc,commit):
+def analyze_commit(cfg, db, repo_id, repo_loc, commit, multithreaded):
 
 # This function analyzes a given commit, counting the additions, removals, and
 # whitespace changes. It collects all of the metadata about the commit, and
@@ -57,7 +57,7 @@ def analyze_commit(db, repo_id,repo_loc,commit):
 	# Sometimes people mix up their name and email in their git settings
 
 		if name.find('@') >= 0 and email.find('@') == -1:
-			log_activity('Debug','Found swapped email/name: %s/%s' % (email,name))
+			cfg.log_activity('Debug','Found swapped email/name: %s/%s' % (email,name))
 			return email,name
 		else:
 			return name,email
@@ -68,7 +68,7 @@ def analyze_commit(db, repo_id,repo_loc,commit):
 	# matching. This extra info is not used, so we discard it.
 
 		if email.count('@') > 1:
-			log_activity('Debug','Found extra @: %s' % email)
+			cfg.log_activity('Debug','Found extra @: %s' % email)
 			return email[:email.find('@',email.find('@')+1)]
 		else:
 			return email
@@ -121,7 +121,7 @@ def analyze_commit(db, repo_id,repo_loc,commit):
 
 		db_local.commit()
 
-		log_activity('Debug','Stored commit: %s' % commit)
+		cfg.log_activity('Debug','Stored commit: %s' % commit)
 
 ### The real function starts here ###
 
@@ -137,24 +137,24 @@ def analyze_commit(db, repo_id,repo_loc,commit):
 	# penalty.
 
 	if multithreaded:
-		db_local,cursor_local = database_connection(
+		db_local,cursor_local = cfg.database_connection(
 			db_host,
 			db_user,
 			db_pass,
-			db_name)
+			db_name, False, True)
 
-		db_people_local,cursor_people_local = database_connection(
+		db_people_local,cursor_people_local = cfg.database_connection(
 			db_host_people,
 			db_user_people,
 			db_pass_people,
-			db_name_people)
+			db_name_people, True, True)
 
 	else:
-		db_local = db
-		cursor_local = cursor
+		db_local = cfg.db
+		cursor_local = cfg.cursor
 
-		db_people_local = db_people
-		cursor_people_local = cursor_people
+		db_people_local = cfg.db_people
+		cursor_people_local = cfg.cursor_people
 
 	# Read the git log
 
@@ -173,7 +173,7 @@ def analyze_commit(db, repo_id,repo_loc,commit):
 	cursor_local.execute(store_working_commit, (repo_id,commit))
 	db_local.commit()
 
-	log_activity('Debug','Stored working commit and analyzing : %s' % commit)
+	cfg.log_activity('Debug','Stored working commit and analyzing : %s' % commit)
 
 	for line in git_log.stdout.read().decode("utf-8",errors="ignore").split(os.linesep):
 		if len(line) > 0:
@@ -313,7 +313,7 @@ def analyze_commit(db, repo_id,repo_loc,commit):
 	cursor_local.execute(remove_commit, (repo_id,commit))
 	db_local.commit()
 
-	log_activity('Debug','Completed and removed working commit: %s' % commit)
+	cfg.log_activity('Debug','Completed and removed working commit: %s' % commit)
 
 	# If multithreading, clean up the local database
 

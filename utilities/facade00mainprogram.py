@@ -93,7 +93,7 @@ db,cursor = cfg.database_connection(
 	db_host,
 	db_user,
 	db_pass,
-	db_name, False)
+	db_name, False, False)
 
 # Open a connection for the people database
 
@@ -101,7 +101,7 @@ db_people,cursor_people = cfg.database_connection(
 	db_host_people,
 	db_user_people,
 	db_pass_people,
-	db_name_people, True)
+	db_name_people, True, False)
 
 #MOVING THIS TO 01's __INIT__
 # # Figure out how much we're going to log

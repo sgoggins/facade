@@ -262,7 +262,7 @@ class Config:
 
 	#### Global helper functions ####
 
-	def database_connection(self, db_host,db_user,db_pass,db_name, people):
+	def database_connection(self, db_host,db_user,db_pass,db_name, people, multi_threaded_connection):
 
 	# Return a database connection based upon which interpreter we're using. CPython
 	# can use any database connection, although MySQLdb is preferred over pymysql
@@ -284,10 +284,10 @@ class Config:
 
 		cursor = db.cursor(pymysql.cursors.DictCursor)
 
-		if people:
+		if people and not multi_threaded_connection:
 			self.cursor_people = cursor
 			self.db_people = db
-		else:
+		else and not multi_threaded_connection:
 			self.cursor = cursor
 			self.db = db
 			
