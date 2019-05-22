@@ -56,7 +56,7 @@ def git_repo_initialize(cfg):
 
     for row in new_repos:
         print(row["git"])
-        update_repo_log(row['id'],'Cloning')
+        update_repo_log(cfg, row['id'],'Cloning')
 
         git = html.unescape(row["git"])
 
@@ -104,7 +104,7 @@ def git_repo_initialize(cfg):
         if return_code != 0:
             print("COULD NOT CREATE REPO DIRECTORY")
 
-            update_repo_log(row['id'],'Failed (mkdir)')
+            update_repo_log(cfg, row['id'],'Failed (mkdir)')
             cfg.update_status('Failed (mkdir %s)' % repo_path)
             cfg.log_activity('Error','Could not create repo directory: %s' %
                 repo_path)
@@ -112,7 +112,7 @@ def git_repo_initialize(cfg):
             sys.exit("Could not create git repo's prerequisite directories. "
                 " Do you have write access?")
 
-        update_repo_log(row['id'],'New (cloning)')
+        update_repo_log(cfg, row['id'],'New (cloning)')
 
         query = ("UPDATE repos SET status='New (Initializing)', path=%s, "
             "name=%s WHERE id=%s")
@@ -142,12 +142,12 @@ def git_repo_initialize(cfg):
             cfg.cursor.execute(query, (repo_relative_path,repo_name,row["id"]))
             cfg.db.commit()
 
-            update_repo_log(row['id'],'Up-to-date')
+            update_repo_log(cfg, row['id'],'Up-to-date')
             cfg.log_activity('Info','Cloned %s' % git)
 
         else:
             # If cloning failed, log it and set the status back to new
-            cfg.update_repo_log(row['id'],'Failed (%s)' % return_code)
+            cfg.update_repo_log(cfg, row['id'],'Failed (%s)' % return_code)
 
             query = ("UPDATE repos SET status='New (failed)' WHERE id=%s")
 
@@ -253,7 +253,7 @@ def git_repo_updates(cfg):
     for row in existing_repos:
 
         cfg.log_activity('Verbose','Attempting to update %s' % row['git'])
-        update_repo_log(row['id'],'Updating')
+        update_repo_log(cfg, row['id'],'Updating')
 
         attempt = 0
 
@@ -296,11 +296,11 @@ def git_repo_updates(cfg):
             cfg.cursor.execute(set_to_analyze, (row['id'], ))
             cfg.db.commit()
 
-            update_repo_log(row['id'],'Up-to-date')
+            update_repo_log(cfg, row['id'],'Up-to-date')
             cfg.log_activity('Verbose','Updated %s' % row["git"])
 
         else:
-            update_repo_log(row['id'],'Failed (%s)' % return_code)
+            update_repo_log(cfg, row['id'],'Failed (%s)' % return_code)
             cfg.log_activity('Error','Could not update %s' % row["git"])
 
     cfg.log_activity('Info','Updating existing repos (complete)')
