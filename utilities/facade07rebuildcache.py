@@ -306,7 +306,7 @@ def fill_empty_affiliations(cfg):
 	if working_author != 'done':
 		cfg.log_activity('Error','Trimming author data in affiliations: %s' %
 			working_author)
-		trim_author(working_author)
+		trim_author(cfg, working_author)
 
 	# Figure out which projects have NULL affiliations so they can be recached
 
