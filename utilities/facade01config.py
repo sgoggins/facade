@@ -287,7 +287,7 @@ class Config:
 		if people and not multi_threaded_connection:
 			self.cursor_people = cursor
 			self.db_people = db
-		else if not multi_threaded_connection:
+		elif not multi_threaded_connection:
 			self.cursor = cursor
 			self.db = db
 			
