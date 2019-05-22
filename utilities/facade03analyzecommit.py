@@ -132,6 +132,31 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 	removed = 0
 	whitespace = 0
 
+
+	try:
+		config = configparser.ConfigParser()
+		config.read(os.path.join(os.path.dirname(__file__),'db.cfg'))
+
+		# Read in the general connection info
+
+		db_user = config['main_database']['user']
+		db_pass = config['main_database']['pass']
+		db_name = config['main_database']['name']
+		db_host = config['main_database']['host']
+
+		# Read in the people connection info
+
+		db_user_people = config['people_database']['user']
+		db_pass_people = config['people_database']['pass']
+		db_name_people = config['people_database']['name']
+		db_host_people = config['people_database']['host']
+
+	except:
+		# If the config import fails, check if there's an older style db.py
+
+		db_user,db_pass,db_name,db_host,db_user_people,db_pass_people,db_name_people,db_host_people = cfg.migrate_database_config()
+
+
 	# Set up new threadsafe database connections if multithreading. Otherwise
 	# use the gloabl database connections so we don't incur a performance
 	# penalty.

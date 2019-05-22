@@ -86,7 +86,7 @@ try:
 except:
 	# If the config import fails, check if there's an older style db.py
 
-	db_user,db_pass,db_name,db_host,db_user_people,db_pass_people,db_name_people,db_host_people = migrate_database_config()
+	db_user,db_pass,db_name,db_host,db_user_people,db_pass_people,db_name_people,db_host_people = cfg.migrate_database_config()
 
 # Open a general-purpose connection
 db,cursor = cfg.database_connection(
