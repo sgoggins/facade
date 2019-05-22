@@ -42,17 +42,18 @@ else:
 	import MySQLdb
 
 
-def update_repo_log(repos_id,status):
+
+def update_repo_log(cfg, repos_id,status):
 
 # Log a repo's fetch status
 
 	log_message = ("INSERT INTO repos_fetch_log (repos_id,status) "
 		"VALUES (%s,%s)")
 
-	cursor.execute(log_message, (repos_id, status))
-	db.commit()
+	cfg.cursor.execute(log_message, (repos_id, status))
+	cfg.db.commit()
 
-def trim_commit(repo_id,commit):
+def trim_commit(cfg, repo_id,commit):
 
 # Quickly remove a given commit
 
@@ -60,12 +61,12 @@ def trim_commit(repo_id,commit):
 		"WHERE repos_id=%s "
 		"AND commit=%s")
 
-	cursor.execute(remove_commit, (repo_id, commit))
-	db.commit()
+	cfg.cursor.execute(remove_commit, (repo_id, commit))
+	cfg.db.commit()
 
-	log_activity('Debug','Trimmed commit: %s' % commit)
+	cfg.log_activity('Debug','Trimmed commit: %s' % commit)
 
-def store_working_author(email):
+def store_working_author(cfg, email):
 
 # Store the working author during affiliation discovery, in case it is
 # interrupted and needs to be trimmed.
@@ -74,12 +75,12 @@ def store_working_author(email):
 		"SET value = %s "
 		"WHERE setting = 'working_author'")
 
-	cursor.execute(store, (email, ))
-	db.commit()
+	cfg.cursor.execute(store, (email, ))
+	cfg.db.commit()
 
-	log_activity('Debug','Stored working author: %s' % email)
+	cfg.log_activity('Debug','Stored working author: %s' % email)
 
-def trim_author(email):
+def trim_author(cfg, email):
 
 # Remove the affiliations associated with an email. Used when an analysis is
 # interrupted during affiliation layering, and the data will be corrupt.
@@ -88,17 +89,17 @@ def trim_author(email):
 		"SET author_affiliation = NULL "
 		"WHERE author_email = %s")
 
-	cursor.execute(trim, (email, ))
-	db.commit()
+	cfg.cursor.execute(trim, (email, ))
+	cfg.db.commit()
 
 	trim = ("UPDATE analysis_data "
 		"SET committer_affiliation = NULL "
 		"WHERE committer_email = %s")
 
-	cursor.execute(trim, (email, ))
-	db.commit()
+	cfg.cursor.execute(trim, (email, ))
+	cfg.db.commit()
 
 	store_working_author('done')
 
-	log_activity('Debug','Trimmed working author: %s' % email)
+	cfg.log_activity('Debug','Trimmed working author: %s' % email)
 

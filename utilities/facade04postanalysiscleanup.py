@@ -41,19 +41,19 @@ if platform.python_implementation() == 'PyPy':
 else:
 	import MySQLdb
 
-def git_repo_cleanup():
+def git_repo_cleanup(cfg):
 
 # Clean up any git repos that are pending deletion
 
-	update_status('Purging deleted repos')
-	log_activity('Info','Processing deletions')
+	cfg.update_status('Purging deleted repos')
+	cfg.log_activity('Info','Processing deletions')
 
-	repo_base_directory = get_setting('repo_directory')
+	repo_base_directory = cfg.get_setting('repo_directory')
 
 	query = "SELECT id,projects_id,path,name FROM repos WHERE status='Delete'"
-	cursor.execute(query)
+	cfg.cursor.execute(query)
 
-	delete_repos = list(cursor)
+	delete_repos = list(cfg.cursor)
 
 	for row in delete_repos:
 
@@ -67,50 +67,50 @@ def git_repo_cleanup():
 		# Remove the analysis data
 
 		remove_analysis_data = "DELETE FROM analysis_data WHERE repos_id=%s"
-		cursor.execute(remove_analysis_data, (row['id'], ))
+		cfg.cursor.execute(remove_analysis_data, (row['id'], ))
 
 		optimize_table = "OPTIMIZE TABLE analysis_data"
-		cursor.execute(optimize_table)
-		db.commit()
+		cfg.cursor.execute(optimize_table)
+		cfg.db.commit()
 
 		# Remove cached repo data
 
 		remove_repo_weekly_cache = "DELETE FROM repo_weekly_cache WHERE repos_id=%s"
-		cursor.execute(remove_repo_weekly_cache, (row['id'], ))
-		db.commit()
+		cfg.cursor.execute(remove_repo_weekly_cache, (row['id'], ))
+		cfg.db.commit()
 
 		optimize_table = "OPTIMIZE TABLE repo_weekly_cache"
-		cursor.execute(optimize_table)
-		db.commit()
+		cfg.cursor.execute(optimize_table)
+		cfg.db.commit()
 
 		remove_repo_monthly_cache = "DELETE FROM repo_monthly_cache WHERE repos_id=%s"
-		cursor.execute(remove_repo_monthly_cache, (row['id'], ))
-		db.commit()
+		cfg.cursor.execute(remove_repo_monthly_cache, (row['id'], ))
+		cfg.db.commit()
 
 		optimize_table = "OPTIMIZE TABLE repo_monthly_cache"
-		cursor.execute(optimize_table)
-		db.commit()
+		cfg.cursor.execute(optimize_table)
+		cfg.db.commit()
 
 		remove_repo_annual_cache = "DELETE FROM repo_annual_cache WHERE repos_id=%s"
-		cursor.execute(remove_repo_annual_cache, (row['id'], ))
-		db.commit()
+		cfg.cursor.execute(remove_repo_annual_cache, (row['id'], ))
+		cfg.db.commit()
 
 		optimize_table = "OPTIMIZE TABLE repo_annual_cache"
-		cursor.execute(optimize_table)
-		db.commit()
+		cfg.cursor.execute(optimize_table)
+		cfg.db.commit()
 
 		# Set project to be recached if just removing a repo
 
 		set_project_recache = ("UPDATE projects SET recache=TRUE "
 			"WHERE id=%s")
-		cursor.execute(set_project_recache,(row['projects_id'], ))
-		db.commit()
+		cfg.cursor.execute(set_project_recache,(row['projects_id'], ))
+		cfg.db.commit()
 
 		# Remove the entry from the repos table
 
 		query = "DELETE FROM repos WHERE id=%s"
-		cursor.execute(query, (row['id'], ))
-		db.commit()
+		cfg.cursor.execute(query, (row['id'], ))
+		cfg.db.commit()
 
 		log_activity('Verbose','Deleted repo %s' % row['id'])
 
@@ -119,19 +119,19 @@ def git_repo_cleanup():
 		# Remove any working commits
 
 		remove_working_commits = "DELETE FROM working_commits WHERE repos_id=%s"
-		cursor.execute(remove_working_commits, (row['id'], ))
-		db.commit()
+		cfg.cursor.execute(remove_working_commits, (row['id'], ))
+		cfg.db.commit()
 
 		# Remove the repo from the logs
 
 		remove_logs = ("DELETE FROM repos_fetch_log WHERE repos_id = %s")
 
-		cursor.execute(remove_logs, (row['id'], ))
-		db.commit()
+		cfg.cursor.execute(remove_logs, (row['id'], ))
+		cfg.db.commit()
 
 		optimize_table = "OPTIMIZE TABLE repos_fetch_log"
-		cursor.execute(optimize_table)
-		db.commit()
+		cfg.cursor.execute(optimize_table)
+		cfg.db.commit()
 
 		# Attempt to cleanup any empty parent directories
 
@@ -147,9 +147,9 @@ def git_repo_cleanup():
 	# Clean up deleted projects
 
 	get_deleted_projects = "SELECT id FROM projects WHERE name='(Queued for removal)'"
-	cursor.execute(get_deleted_projects)
+	cfg.cursor.execute(get_deleted_projects)
 
-	deleted_projects = list(cursor)
+	deleted_projects = list(cfg.cursor)
 
 	for project in deleted_projects:
 
@@ -157,44 +157,44 @@ def git_repo_cleanup():
 
 		clear_annual_cache = ("DELETE FROM project_annual_cache WHERE "
 			"projects_id=%s")
-		cursor.execute(clear_annual_cache, (project['id'], ))
-		db.commit()
+		cfg.cursor.execute(clear_annual_cache, (project['id'], ))
+		cfg.db.commit()
 
 		optimize_table = "OPTIMIZE TABLE project_annual_cache"
-		cursor.execute(optimize_table)
-		db.commit()
+		cfg.cursor.execute(optimize_table)
+		cfg.db.commit()
 
 		clear_monthly_cache = ("DELETE FROM project_monthly_cache WHERE "
 			"projects_id=%s")
-		cursor.execute(clear_monthly_cache, (project['id'], ))
-		db.commit()
+		cfg.cursor.execute(clear_monthly_cache, (project['id'], ))
+		cfg.db.commit()
 
 		optimize_table = "OPTIMIZE TABLE project_monthly_cache"
-		cursor.execute(optimize_table)
-		db.commit()
+		cfg.cursor.execute(optimize_table)
+		cfg.db.commit()
 
 		clear_weekly_cache = ("DELETE FROM project_weekly_cache WHERE "
 			"projects_id=%s")
-		cursor.execute(clear_weekly_cache, (project['id'], ))
-		db.commit()
+		cfg.cursor.execute(clear_weekly_cache, (project['id'], ))
+		cfg.db.commit()
 
 		optimize_table = "OPTIMIZE TABLE project_weekly_cache"
-		cursor.execute(optimize_table)
-		db.commit()
+		cfg.cursor.execute(optimize_table)
+		cfg.db.commit()
 
 		clear_unknown_cache = ("DELETE FROM unknown_cache WHERE "
 			"projects_id=%s")
-		cursor.execute(clear_unknown_cache, (project['id'], ))
-		db.commit()
+		cfg.cursor.execute(clear_unknown_cache, (project['id'], ))
+		cfg.db.commit()
 
 		optimize_table = "OPTIMIZE TABLE project_weekly_cache"
-		cursor.execute(optimize_table)
-		db.commit()
+		cfg.cursor.execute(optimize_table)
+		cfg.db.commit()
 
 		# Remove any projects which were also marked for deletion
 
 		remove_project = "DELETE FROM projects WHERE id=%s"
-		cursor.execute(remove_project, (project['id'], ))
-		db.commit()
+		cfg.cursor.execute(remove_project, (project['id'], ))
+		cfg.db.commit()
 
-	log_activity('Info','Processing deletions (complete)')
+	cfg.log_activity('Info','Processing deletions (complete)')

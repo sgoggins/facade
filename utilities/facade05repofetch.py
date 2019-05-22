@@ -36,22 +36,23 @@ import os
 import getopt
 import xlsxwriter
 import configparser
+from facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author  
 if platform.python_implementation() == 'PyPy':
 	import pymysql
 else:
 	import MySQLdb
 
-def git_repo_initialize():
+def git_repo_initialize(cfg):
 
 # Select any new git repos so we can set up their locations and git clone
 
-	update_status('Fetching new repos')
-	log_activity('Info','Fetching new repos')
+	cfg.update_status('Fetching new repos')
+	cfg.log_activity('Info','Fetching new repos')
 
 	query = "SELECT id,projects_id,git FROM repos WHERE status LIKE 'New%'";
-	cursor.execute(query)
+	cfg.cursor.execute(query)
 
-	new_repos = list(cursor)
+	new_repos = list(cfg.cursor)
 
 	for row in new_repos:
 		print(row["git"])
@@ -76,11 +77,11 @@ def git_repo_initialize():
 
 		# Check if there will be a storage path collision
 		query = ("SELECT NULL FROM repos WHERE CONCAT(projects_id,'/',path,name) = %s")
-		cursor.execute(query, ('{}/{}{}'.format(row["projects_id"], repo_relative_path, repo_name), ))
-		db.commit()
+		cfg.cursor.execute(query, ('{}/{}{}'.format(row["projects_id"], repo_relative_path, repo_name), ))
+		cfg.db.commit()
 
 		# If there is a collision, append a slug to repo_name to yield a unique path
-		if cursor.rowcount:
+		if cfg.cursor.rowcount:
 
 			slug = 1
 			is_collision = True
@@ -93,7 +94,7 @@ def git_repo_initialize():
 
 			repo_name = '%s-%s' % (repo_name,slug)
 
-			log_activity('Verbose','Identical repo detected, storing %s in %s' %
+			cfg.log_activity('Verbose','Identical repo detected, storing %s in %s' %
 				(git,repo_name))
 
 		# Create the prerequisite directories
@@ -104,8 +105,8 @@ def git_repo_initialize():
 			print("COULD NOT CREATE REPO DIRECTORY")
 
 			update_repo_log(row['id'],'Failed (mkdir)')
-			update_status('Failed (mkdir %s)' % repo_path)
-			log_activity('Error','Could not create repo directory: %s' %
+			cfg.update_status('Failed (mkdir %s)' % repo_path)
+			cfg.log_activity('Error','Could not create repo directory: %s' %
 				repo_path)
 
 			sys.exit("Could not create git repo's prerequisite directories. "
@@ -116,10 +117,10 @@ def git_repo_initialize():
 		query = ("UPDATE repos SET status='New (Initializing)', path=%s, "
 			"name=%s WHERE id=%s")
 
-		cursor.execute(query, (repo_relative_path,repo_name,row["id"]))
-		db.commit()
+		cfg.cursor.execute(query, (repo_relative_path,repo_name,row["id"]))
+		cfg.db.commit()
 
-		log_activity('Verbose','Cloning: %s' % git)
+		cfg.log_activity('Verbose','Cloning: %s' % git)
 
 		cmd = "git -C %s clone '%s' %s" % (repo_path,git,repo_name)
 		return_code = subprocess.Popen([cmd], shell=True).wait()
@@ -131,48 +132,48 @@ def git_repo_initialize():
 
 			update_project_status = ("UPDATE repos SET status='Update' WHERE "
 				"projects_id=%s AND status != 'Empty'")
-			cursor.execute(update_project_status, (row['projects_id'], ))
-			db.commit()
+			cfg.cursor.execute(update_project_status, (row['projects_id'], ))
+			cfg.db.commit()
 
 			# Since we just cloned the new repo, set it straight to analyze.
 			query = ("UPDATE repos SET status='Analyze',path=%s, name=%s "
 				"WHERE id=%s and status != 'Empty'")
 
-			cursor.execute(query, (repo_relative_path,repo_name,row["id"]))
-			db.commit()
+			cfg.cursor.execute(query, (repo_relative_path,repo_name,row["id"]))
+			cfg.db.commit()
 
 			update_repo_log(row['id'],'Up-to-date')
-			log_activity('Info','Cloned %s' % git)
+			cfg.log_activity('Info','Cloned %s' % git)
 
 		else:
 			# If cloning failed, log it and set the status back to new
-			update_repo_log(row['id'],'Failed (%s)' % return_code)
+			cfg.update_repo_log(row['id'],'Failed (%s)' % return_code)
 
 			query = ("UPDATE repos SET status='New (failed)' WHERE id=%s")
 
-			cursor.execute(query, (row['id'], ))
-			db.commit()
+			cfg.cursor.execute(query, (row['id'], ))
+			cfg.db.commit()
 
-			log_activity('Error','Could not clone %s' % git)
+			cfg.log_activity('Error','Could not clone %s' % git)
 
-	log_activity('Info', 'Fetching new repos (complete)')
+	cfg.log_activity('Info', 'Fetching new repos (complete)')
 
 	
-def check_for_repo_updates():
+def check_for_repo_updates(cfg):
 
 # Check the last time a repo was updated and if it has been longer than the
 # update_frequency, mark its project for updating during the next analysis.
 
-	update_status('Checking if any repos need to update')
-	log_activity('Info','Checking repos to update')
+	cfg.update_status('Checking if any repos need to update')
+	cfg.log_activity('Info','Checking repos to update')
 
-	update_frequency = get_setting('update_frequency')
+	update_frequency = cfg.get_setting('update_frequency')
 
 	get_initialized_repos = ("SELECT id FROM repos WHERE status NOT LIKE 'New%' "
 		"AND status != 'Delete' "
 		"AND status != 'Analyze' AND status != 'Empty'")
-	cursor.execute(get_initialized_repos)
-	repos = list(cursor)
+	cfg.cursor.execute(get_initialized_repos)
+	repos = list(cfg.cursor)
 
 	for repo in repos:
 
@@ -182,17 +183,17 @@ def check_for_repo_updates():
 			"repos_id=%s AND status='Up-to-date' AND "
 			"date >= CURRENT_TIMESTAMP(6) - INTERVAL %s HOUR ")
 
-		cursor.execute(get_last_update, (repo['id'], update_frequency))
+		cfg.cursor.execute(get_last_update, (repo['id'], update_frequency))
 
 		# If the repo has not been updated within the waiting period, mark it.
 		# Also mark any other repos in the project, so we only recache the
 		# project once per waiting period.
 
-		if cursor.rowcount == 0:
+		if cfg.cursor.rowcount == 0:
 			mark_repo = ("UPDATE repos r JOIN projects p ON p.id = r.projects_id "
 				"SET status='Update' WHERE "
 				"r.id=%s and r.status != 'Empty'")
-			cursor.execute(mark_repo, (repo['id'], ))
+			cfg.cursor.execute(mark_repo, (repo['id'], ))
 			db.commit()
 
 	# Mark the entire project for an update, so that under normal
@@ -201,57 +202,57 @@ def check_for_repo_updates():
 	update_project_status = ("UPDATE repos r LEFT JOIN repos s ON r.projects_id=s.projects_id "
 		"SET r.status='Update' WHERE s.status='Update' AND "
 		"r.status != 'Analyze' AND r.status != 'Empty'")
-	cursor.execute(update_project_status)
-	db.commit()
+	cfg.cursor.execute(update_project_status)
+	cfg.db.commit()
 
-	log_activity('Info','Checking repos to update (complete)')
+	cfg.log_activity('Info','Checking repos to update (complete)')
 
-def force_repo_updates():
+def force_repo_updates(cfg):
 
 # Set the status of all non-new repos to "Update".
 
-	update_status('Forcing all non-new repos to update')
-	log_activity('Info','Forcing repos to update')
+	cfg.update_status('Forcing all non-new repos to update')
+	cfg.log_activity('Info','Forcing repos to update')
 
 	get_repo_ids = ("UPDATE repos SET status='Update' WHERE status "
 		"NOT LIKE 'New%' AND STATUS!='Delete' AND STATUS !='Empty'")
-	cursor.execute(get_repo_ids)
-	db.commit()
+	cfg.cursor.execute(get_repo_ids)
+	cfg.db.commit()
 
-	log_activity('Info','Forcing repos to update (complete)')
+	cfg.log_activity('Info','Forcing repos to update (complete)')
 
-def force_repo_analysis():
+def force_repo_analysis(cfg):
 
 # Set the status of all non-new repos to "Analyze".
 
-	update_status('Forcing all non-new repos to be analyzed')
-	log_activity('Info','Forcing repos to be analyzed')
+	cfg.update_status('Forcing all non-new repos to be analyzed')
+	cfg.log_activity('Info','Forcing repos to be analyzed')
 
 	set_to_analyze = ("UPDATE repos SET status='Analyze' WHERE status "
 		"NOT LIKE 'New%' AND STATUS!='Delete' AND STATUS != 'Empty'")
-	cursor.execute(set_to_analyze)
-	db.commit()
+	cfg.cursor.execute(set_to_analyze)
+	cfg.db.commit()
 
-	log_activity('Info','Forcing repos to be analyzed (complete)')
+	cfg.log_activity('Info','Forcing repos to be analyzed (complete)')
 
-def git_repo_updates():
+def git_repo_updates(cfg):
 
 # Update existing repos
 
-	update_status('Updating repos')
-	log_activity('Info','Updating existing repos')
+	cfg.update_status('Updating repos')
+	cfg.log_activity('Info','Updating existing repos')
 
-	repo_base_directory = get_setting('repo_directory')
+	repo_base_directory = cfg.get_setting('repo_directory')
 
 	query = ("SELECT id,projects_id,git,name,path FROM repos WHERE "
 		"status='Update'");
-	cursor.execute(query)
+	cfg.cursor.execute(query)
 
-	existing_repos = list(cursor)
+	existing_repos = list(cfg.cursor)
 
 	for row in existing_repos:
 
-		log_activity('Verbose','Attempting to update %s' % row['git'])
+		cfg.log_activity('Verbose','Attempting to update %s' % row['git'])
 		update_repo_log(row['id'],'Updating')
 
 		attempt = 0
@@ -274,7 +275,7 @@ def git_repo_updates():
 
 			elif attempt == 0:
 
-				log_activity('Verbose','git pull failed, attempting reset and '
+				cfg.log_activity('Verbose','git pull failed, attempting reset and '
 					'clean for %s' % row['git'])
 
 				cmd_reset = ("git -C %s%s/%s%s reset --hard origin/master"
@@ -292,14 +293,14 @@ def git_repo_updates():
 		if return_code == 0:
 
 			set_to_analyze = "UPDATE repos SET status='Analyze' WHERE id=%s"
-			cursor.execute(set_to_analyze, (row['id'], ))
-			db.commit()
+			cfg.cursor.execute(set_to_analyze, (row['id'], ))
+			cfg.db.commit()
 
 			update_repo_log(row['id'],'Up-to-date')
-			log_activity('Verbose','Updated %s' % row["git"])
+			cfg.log_activity('Verbose','Updated %s' % row["git"])
 
 		else:
 			update_repo_log(row['id'],'Failed (%s)' % return_code)
-			log_activity('Error','Could not update %s' % row["git"])
+			cfg.log_activity('Error','Could not update %s' % row["git"])
 
-	log_activity('Info','Updating existing repos (complete)')
+	cfg.log_activity('Info','Updating existing repos (complete)')

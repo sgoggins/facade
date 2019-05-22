@@ -26,7 +26,7 @@
 # repos. It also rebuilds analysis data, checks any changed affiliations and
 # aliases, and caches data for display.
 
-
+import pymysql
 import sys
 import platform
 import imp
@@ -39,7 +39,7 @@ import getopt
 import xlsxwriter
 import configparser
 
-from facade01config import increment_db, update_db, migrate_database_config, database_connection, get_setting, update_status, log_activity          
+from facade01config import Config#increment_db, update_db, migrate_database_config, database_connection, get_setting, update_status, log_activity          
 from facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author   
 from facade03analyzecommit import analyze_commit
 from facade04postanalysiscleanup import git_repo_cleanup
@@ -56,6 +56,8 @@ else:
 
 
 global log_level
+
+cfg = Config()
 
 html = html.parser.HTMLParser()
 
@@ -87,37 +89,38 @@ except:
 	db_user,db_pass,db_name,db_host,db_user_people,db_pass_people,db_name_people,db_host_people = migrate_database_config()
 
 # Open a general-purpose connection
-
-db,cursor = database_connection(
+db,cursor = cfg.database_connection(
 	db_host,
 	db_user,
 	db_pass,
-	db_name)
+	db_name, False)
 
 # Open a connection for the people database
 
-db_people,cursor_people = database_connection(
+db_people,cursor_people = cfg.database_connection(
 	db_host_people,
 	db_user_people,
 	db_pass_people,
-	db_name_people)
+	db_name_people, True)
 
-# Figure out how much we're going to log
-log_level = get_setting('log_level')
+#MOVING THIS TO 01's __INIT__
+# # Figure out how much we're going to log
+# log_level = cfg.get_setting('log_level')
 
 # Check if the database is current and update it if necessary
 try:
-	current_db = int(get_setting('database_version'))
+	current_db = int(cfg.get_setting('database_version'))
 except:
 	# Catch databases which existed before database versioning
 	current_db = -1
 
-if current_db < upstream_db:
+#WHAT IS THE UPSTREAM_DB???
+# if current_db < upstream_db:
 
-	print(("Current database version: %s\nUpstream database version %s\n" %
-		(current_db, upstream_db)))
+# 	print(("Current database version: %s\nUpstream database version %s\n" %
+# 		(current_db, upstream_db)))
 
-	update_db(current_db);
+# 	cfg.update_db(current_db);
 
 # Figure out what we need to do
 limited_run = 0
@@ -161,139 +164,139 @@ for opt in opts:
 	elif opt[0] == '-d':
 		delete_marked_repos = 1
 		limited_run = 1
-		log_activity('Info','Option set: delete marked repos.')
+		cfg.log_activity('Info','Option set: delete marked repos.')
 
 	elif opt[0] == '-c':
 		clone_repos = 1
 		limited_run = 1
-		log_activity('Info','Option set: clone new repos.')
+		cfg.log_activity('Info','Option set: clone new repos.')
 
 	elif opt[0] == '-u':
 		check_updates = 1
 		limited_run = 1
-		log_activity('Info','Option set: checking for repo updates')
+		cfg.log_activity('Info','Option set: checking for repo updates')
 
 	elif opt[0] == '-U':
 		force_updates = 1
-		log_activity('Info','Option set: forcing repo updates')
+		cfg.log_activity('Info','Option set: forcing repo updates')
 
 	elif opt[0] == '-p':
 		pull_repos = 1
 		limited_run = 1
-		log_activity('Info','Option set: update repos.')
+		cfg.log_activity('Info','Option set: update repos.')
 
 	elif opt[0] == '-a':
 		run_analysis = 1
 		limited_run = 1
-		log_activity('Info','Option set: running analysis.')
+		cfg.log_activity('Info','Option set: running analysis.')
 
 	elif opt[0] == '-A':
 		force_analysis = 1
 		run_analysis = 1
 		limited_run = 1
-		log_activity('Info','Option set: forcing analysis.')
+		cfg.log_activity('Info','Option set: forcing analysis.')
 
 	elif opt[0] == '-m':
 		multithreaded = 0
-		log_activity('Info','Option set: disabling multithreading.')
+		cfg.log_activity('Info','Option set: disabling multithreading.')
 
 	elif opt[0] == '-n':
 		nuke_stored_affiliations = 1
 		limited_run = 1
-		log_activity('Info','Option set: nuking all affiliations')
+		cfg.log_activity('Info','Option set: nuking all affiliations')
 
 	elif opt[0] == '-f':
 		fix_affiliations = 1
 		limited_run = 1
-		log_activity('Info','Option set: fixing affiliations.')
+		cfg.log_activity('Info','Option set: fixing affiliations.')
 
 	elif opt[0] == '-I':
 		force_invalidate_caches = 1
 		limited_run = 1
-		log_activity('Info','Option set: Invalidate caches.')
+		cfg.log_activity('Info','Option set: Invalidate caches.')
 
 	elif opt[0] == '-r':
 		rebuild_caches = 1
 		limited_run = 1
-		log_activity('Info','Option set: rebuilding caches.')
+		cfg.log_activity('Info','Option set: rebuilding caches.')
 
 	elif opt[0] == '-x':
 		create_xlsx_summary_files = 1
 		limited_run = 1
-		log_activity('Info','Option set: creating Excel summary files.')
+		cfg.log_activity('Info','Option set: creating Excel summary files.')
 
 # Get the location of the directory where git repos are stored
-repo_base_directory = get_setting('repo_directory')
+repo_base_directory = cfg.get_setting('repo_directory')
 
 # Determine if it's safe to start the script
-current_status = get_setting('utility_status')
+current_status = cfg.get_setting('utility_status')
 
 if current_status != 'Idle':
-	log_activity('Error','Something is already running, aborting maintenance '
+	cfg.log_activity('Error','Something is already running, aborting maintenance '
 		'and analysis.\nIt is unsafe to continue.')
 	sys.exit(1)
 
 if len(repo_base_directory) == 0:
-	log_activity('Error','No base directory. It is unsafe to continue.')
+	cfg.log_activity('Error','No base directory. It is unsafe to continue.')
 	update_status('Failed: No base directory')
 	sys.exit(1)
 
 # Begin working
 
 start_time = time.time()
-log_activity('Quiet','Running facade-worker.py')
+cfg.log_activity('Quiet','Running facade-worker.py')
 
 if not limited_run or (limited_run and delete_marked_repos):
-	git_repo_cleanup()
+	git_repo_cleanup(cfg)
 
 if not limited_run or (limited_run and clone_repos):
-	git_repo_initialize()
+	git_repo_initialize(cfg)
 
 if not limited_run or (limited_run and check_updates):
-	check_for_repo_updates()
+	check_for_repo_updates(cfg)
 
 if force_updates:
-	force_repo_updates()
+	force_repo_updates(cfg)
 
 if not limited_run or (limited_run and pull_repos):
-	git_repo_updates()
+	git_repo_updates(cfg)
 
 if force_analysis:
-	force_repo_analysis()
+	force_repo_analysis(cfg)
 
 if not limited_run or (limited_run and run_analysis):
-	analysis()
+	analysis(cfg)
 
 if nuke_stored_affiliations:
-	nuke_affiliations()
+	nuke_affiliations(cfg)
 
 if not limited_run or (limited_run and fix_affiliations):
-	fill_empty_affiliations()
+	fill_empty_affiliations(cfg)
 
 if force_invalidate_caches:
-	invalidate_caches()
+	invalidate_caches(cfg)
 
 if not limited_run or (limited_run and rebuild_caches):
-	rebuild_unknown_affiliation_and_web_caches()
+	rebuild_unknown_affiliation_and_web_caches(cfg)
 
 if not limited_run or (limited_run and create_xlsx_summary_files):
 
-	log_activity('Info','Creating summary Excel files')
+	cfg.log_activity('Info','Creating summary Excel files')
 
 	from excel_generators import *
 
-	log_activity('Info','Creating summary Excel files (complete)')
+	cfg.log_activity('Info','Creating summary Excel files (complete)')
 
 # All done
 
-update_status('Idle')
-log_activity('Quiet','facade-worker.py completed')
+cfg.update_status('Idle')
+cfg.log_activity('Quiet','facade-worker.py completed')
 
 elapsed_time = time.time() - start_time
 
 print('\nCompleted in %s\n' % datetime.timedelta(seconds=int(elapsed_time)))
 
-cursor.close()
-cursor_people.close()
-db.close()
-db_people.close()
+cfg.cursor.close()
+cfg.cursor_people.close()
+cfg.db.close()
+cfg.db_people.close()

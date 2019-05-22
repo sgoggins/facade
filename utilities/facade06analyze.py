@@ -41,7 +41,7 @@ if platform.python_implementation() == 'PyPy':
 else:
 	import MySQLdb
 	
-def analysis():
+def analysis(cfg):
 
 # Run the analysis by looping over all active repos. For each repo, we retrieve
 # the list of commits which lead to HEAD. If any are missing from the database,
@@ -61,32 +61,32 @@ def analysis():
 		log_message = ("INSERT INTO analysis_log (repos_id,status) "
 			"VALUES (%s,%s)")
 
-		cursor.execute(log_message, (repos_id,status))
-		db.commit()
+		cfg.cursor.execute(log_message, (repos_id,status))
+		cfg.db.commit()
 
 ### The real function starts here ###
 
-	update_status('Running analysis')
-	log_activity('Info','Beginning analysis')
+	cfg.update_status('Running analysis')
+	cfg.log_activity('Info','Beginning analysis')
 
-	start_date = get_setting('start_date')
+	start_date = cfg.get_setting('start_date')
 
 	repo_list = "SELECT id,projects_id,path,name FROM repos WHERE status='Analyze'"
-	cursor.execute(repo_list)
-	repos = list(cursor)
+	cfg.cursor.execute(repo_list)
+	repos = list(cfg.cursor)
 
 	for repo in repos:
 
 		update_analysis_log(repo['id'],'Beginning analysis')
-		log_activity('Verbose','Analyzing repo: %s (%s)' % (repo['id'],repo['name']))
+		cfg.log_activity('Verbose','Analyzing repo: %s (%s)' % (repo['id'],repo['name']))
 
 		# First we check to see if the previous analysis didn't complete
 
 		get_status = ("SELECT working_commit FROM working_commits WHERE repos_id=%s")
 
-		cursor.execute(get_status, (repo['id'], ))
-		working_commits = list(cursor)
-		#cursor.fetchone()['working_commit']
+		cfg.cursor.execute(get_status, (repo['id'], ))
+		working_commits = list(cfg.cursor)
+		#cfg.cursor.fetchone()['working_commit']
 
 		# If there's a commit still there, the previous run was interrupted and
 		# the commit data may be incomplete. It should be trimmed, just in case.
@@ -96,10 +96,10 @@ def analysis():
 			# Remove the working commit.
 			remove_commit = ("DELETE FROM working_commits "
 				"WHERE repos_id = %s AND working_commit = %s")
-			cursor.execute(remove_commit, (repo['id'],commit['working_commit']))
-			db.commit()
+			cfg.cursor.execute(remove_commit, (repo['id'],commit['working_commit']))
+			cfg.db.commit()
 
-			log_activity('Debug','Removed working commit: %s' % commit['working_commit'])
+			cfg.log_activity('Debug','Removed working commit: %s' % commit['working_commit'])
 
 		# Start the main analysis
 
@@ -128,16 +128,16 @@ def analysis():
 
 		find_existing = ("SELECT DISTINCT commit FROM analysis_data WHERE repos_id=%s")
 
-		cursor.execute(find_existing, (repo['id'], ))
+		cfg.cursor.execute(find_existing, (repo['id'], ))
 
-		for commit in list(cursor):
+		for commit in list(cfg.cursor):
 			existing_commits.add(commit['commit'])
 
 		# Find missing commits and add them
 
 		missing_commits = parent_commits - existing_commits
 
-		log_activity('Debug','Commits missing from repo %s: %s' %
+		cfg.log_activity('Debug','Commits missing from repo %s: %s' %
 			(repo['id'],len(missing_commits)))
 
 		if multithreaded:
@@ -165,7 +165,7 @@ def analysis():
 
 		trimmed_commits = existing_commits - parent_commits
 
-		log_activity('Debug','Commits to be trimmed from repo %s: %s' %
+		cfg.log_activity('Debug','Commits to be trimmed from repo %s: %s' %
 			(repo['id'],len(trimmed_commits)))
 
 		for commit in trimmed_commits:
@@ -174,10 +174,10 @@ def analysis():
 
 		set_complete = "UPDATE repos SET status='Complete' WHERE id=%s and status != 'Empty'"
 
-		cursor.execute(set_complete, (repo['id'], ))
+		cfg.cursor.execute(set_complete, (repo['id'], ))
 
 		update_analysis_log(repo['id'],'Commit trimming complete')
 
 		update_analysis_log(repo['id'],'Complete')
 
-	log_activity('Info','Running analysis (complete)')
+	cfg.log_activity('Info','Running analysis (complete)')

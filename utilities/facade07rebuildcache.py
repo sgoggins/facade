@@ -36,12 +36,13 @@ import os
 import getopt
 import xlsxwriter
 import configparser
+from facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author
 if platform.python_implementation() == 'PyPy':
 	import pymysql
 else:
 	import MySQLdb
 
-def nuke_affiliations():
+def nuke_affiliations(cfg):
 
 # Delete all stored affiliations in the database. Normally when you
 # add/remove/change affiliation data via the web UI, any potentially affected
@@ -51,17 +52,17 @@ def nuke_affiliations():
 # this is the scorched earth way: remove them all to force a total rebuild.
 # Brutal but effective.
 
-	log_activity('Info','Nuking affiliations')
+	cfg.log_activity('Info','Nuking affiliations')
 
 	nuke = ("UPDATE analysis_data SET author_affiliation = NULL, "
 			"committer_affiliation = NULL")
 
-	cursor.execute(nuke)
-	db.commit()
+	cfg.cursor.execute(nuke)
+	cfg.db.commit()
 
-	log_activity('Info','Nuking affiliations (complete)')
+	cfg.log_activity('Info','Nuking affiliations (complete)')
 
-def fill_empty_affiliations():
+def fill_empty_affiliations(cfg):
 
 # When a record is added, it has no affiliation data. Also, when an affiliation
 # mapping is changed via the UI, affiliation data will be set to NULL. This
@@ -78,8 +79,8 @@ def fill_empty_affiliations():
 			"AND %s_date >= %%s" %
 			(email_type, email_type, email_type, email_type))
 
-		cursor.execute(update, (affiliation, email, start_date))
-		db.commit()
+		cfg.cursor.execute(update, (affiliation, email, start_date))
+		cfg.db.commit()
 
 	def discover_null_affiliations(attribution,email):
 
@@ -97,16 +98,16 @@ def fill_empty_affiliations():
 			"AND active = TRUE "
 			"ORDER BY start_date DESC")
 
-		cursor_people.execute(find_exact_match, (email, ))
+		cfg.cursor_people.execute(find_exact_match, (email, ))
 		db_people.commit
 
-		matches = list(cursor_people)
+		matches = list(cfg.cursor_people)
 
 		if not matches and email.find('@') < 0:
 
 			# It's not a properly formatted email, leave it NULL and log it.
 
-			log_activity('Info','Unmatchable email: %s' % email)
+			cfg.log_activity('Info','Unmatchable email: %s' % email)
 
 			return
 
@@ -122,10 +123,10 @@ def fill_empty_affiliations():
 				"AND active = TRUE "
 				"ORDER BY start_date DESC")
 
-			cursor_people.execute(find_exact_domain, (domain, ))
+			cfg.cursor_people.execute(find_exact_domain, (domain, ))
 			db_people.commit()
 
-			matches = list(cursor_people)
+			matches = list(cfg.cursor_people)
 
 		if not matches:
 
@@ -137,10 +138,10 @@ def fill_empty_affiliations():
 				"AND active = TRUE "
 				"ORDER BY start_date DESC")
 
-			cursor_people.execute(find_domain, (domain[domain.rfind('.',0,domain.rfind('.',0))+1:], ))
+			cfg.cursor_people.execute(find_domain, (domain[domain.rfind('.',0,domain.rfind('.',0))+1:], ))
 			db_people.commit()
 
-			matches = list(cursor_people)
+			matches = list(cfg.cursor_people)
 
 		if not matches:
 
@@ -153,7 +154,7 @@ def fill_empty_affiliations():
 
 		if matches:
 
-			log_activity('Debug','Found domain match for %s' % email)
+			cfg.log_activity('Debug','Found domain match for %s' % email)
 
 			for match in matches:
 				update = ("UPDATE analysis_data "
@@ -163,8 +164,8 @@ def fill_empty_affiliations():
 					"AND %s_date >= %%s" %
 					(attribution, attribution, attribution, attribution))
 
-				cursor.execute(update, (match['affiliation'], email, match['start_date']))
-				db.commit()
+				cfg.cursor.execute(update, (match['affiliation'], email, match['start_date']))
+				cfg.db.commit()
 
 	def discover_alias(email):
 
@@ -175,10 +176,10 @@ def fill_empty_affiliations():
 			"WHERE alias=%s "
 			"AND active = TRUE")
 
-		cursor_people.execute(fetch_canonical, (email, ))
+		cfg.cursor_people.execute(fetch_canonical, (email, ))
 		db_people.commit()
 
-		canonical = list(cursor_people)
+		canonical = list(cfg.cursor_people)
 
 		if canonical:
 			for email in canonical:
@@ -188,122 +189,122 @@ def fill_empty_affiliations():
 
 ### The real function starts here ###
 
-	update_status('Filling empty affiliations')
-	log_activity('Info','Filling empty affiliations')
+	cfg.update_status('Filling empty affiliations')
+	cfg.log_activity('Info','Filling empty affiliations')
 
 	# Process any changes to the affiliations or aliases, and set any existing
 	# entries in analysis_data to NULL so they are filled properly.
 
 	# First, get the time we started fetching since we'll need it later
 
-	cursor.execute("SELECT current_timestamp(6) as fetched")
+	cfg.cursor.execute("SELECT current_timestamp(6) as fetched")
 
-	affiliations_fetched = cursor.fetchone()['fetched']
+	affiliations_fetched = cfg.cursor.fetchone()['fetched']
 
 	# Now find the last time we worked on affiliations, to figure out what's new
 
-	affiliations_processed = get_setting('affiliations_processed')
+	affiliations_processed = cfg.get_setting('affiliations_processed')
 
 	get_changed_affiliations = ("SELECT domain FROM affiliations WHERE "
 		"last_modified >= %s")
 
-	cursor_people.execute(get_changed_affiliations, (affiliations_processed, ))
+	cfg.cursor_people.execute(get_changed_affiliations, (affiliations_processed, ))
 
-	changed_affiliations = list(cursor_people)
+	changed_affiliations = list(cfg.cursor_people)
 
 	# Process any affiliations which changed since we last checked
 
 	for changed_affiliation in changed_affiliations:
 
-		log_activity('Debug','Resetting affiliation for %s' %
+		cfg.log_activity('Debug','Resetting affiliation for %s' %
 			changed_affiliation['domain'])
 
 		set_author_to_null = ("UPDATE analysis_data SET author_affiliation = NULL "
 			"WHERE author_email LIKE CONCAT('%%',%s)")
 
-		cursor.execute(set_author_to_null, (changed_affiliation['domain'], ))
-		db.commit()
+		cfg.cursor.execute(set_author_to_null, (changed_affiliation['domain'], ))
+		cfg.db.commit()
 
 		set_committer_to_null = ("UPDATE analysis_data SET committer_affiliation = NULL "
 			"WHERE committer_email LIKE CONCAT('%%',%s)")
 
-		cursor.execute(set_committer_to_null, (changed_affiliation['domain'], ))
-		db.commit()
+		cfg.cursor.execute(set_committer_to_null, (changed_affiliation['domain'], ))
+		cfg.db.commit()
 
 	# Update the last fetched date, so we know where to start next time.
 
 	update_affiliations_date = ("UPDATE settings SET value=%s "
 		"WHERE setting = 'affiliations_processed'")
 
-	cursor.execute(update_affiliations_date, (affiliations_fetched, ))
-	db.commit()
+	cfg.cursor.execute(update_affiliations_date, (affiliations_fetched, ))
+	cfg.db.commit()
 
 	# On to the aliases, now
 
 	# First, get the time we started fetching since we'll need it later
 
-	cursor.execute("SELECT current_timestamp(6) as fetched")
+	cfg.cursor.execute("SELECT current_timestamp(6) as fetched")
 
-	aliases_fetched = cursor.fetchone()['fetched']
+	aliases_fetched = cfg.cursor.fetchone()['fetched']
 
 	# Now find the last time we worked on aliases, to figure out what's new
 
-	aliases_processed = get_setting('aliases_processed')
+	aliases_processed = cfg.get_setting('aliases_processed')
 
 	get_changed_aliases = ("SELECT alias FROM aliases WHERE "
 		"last_modified >= %s")
 
-	cursor_people.execute(get_changed_aliases, (aliases_processed, ))
+	cfg.cursor_people.execute(get_changed_aliases, (aliases_processed, ))
 
-	changed_aliases = list(cursor_people)
+	changed_aliases = list(cfg.cursor_people)
 
 	# Process any aliases which changed since we last checked
 
 	for changed_alias in changed_aliases:
 
-		log_activity('Debug','Resetting affiliation for %s' %
+		cfg.log_activity('Debug','Resetting affiliation for %s' %
 			changed_alias['alias'])
 
 		set_author_to_null = ("UPDATE analysis_data SET author_affiliation = NULL "
 			"WHERE author_raw_email LIKE CONCAT('%%',%s)")
 
-		cursor.execute(set_author_to_null,(changed_alias['alias'], ))
-		db.commit()
+		cfg.cursor.execute(set_author_to_null,(changed_alias['alias'], ))
+		cfg.db.commit()
 
 		set_committer_to_null = ("UPDATE analysis_data SET committer_affiliation = NULL "
 			"WHERE committer_raw_email LIKE CONCAT('%%',%s)")
 
-		cursor.execute(set_committer_to_null, (changed_alias['alias'], ))
-		db.commit()
+		cfg.cursor.execute(set_committer_to_null, (changed_alias['alias'], ))
+		cfg.db.commit()
 
 		reset_author = ("UPDATE analysis_data "
 			"SET author_email = %s "
 			"WHERE author_raw_email = %s")
 
-		cursor.execute(reset_author, (discover_alias(changed_alias['alias']),changed_alias['alias']))
-		db.commit
+		cfg.cursor.execute(reset_author, (discover_alias(changed_alias['alias']),changed_alias['alias']))
+		cfg.db.commit
 
 		reset_committer = ("UPDATE analysis_data "
 			"SET committer_email = %s "
 			"WHERE committer_raw_email = %s")
 
-		cursor.execute(reset_committer,	(discover_alias(changed_alias['alias']),changed_alias['alias']))
-		db.commit
+		cfg.cursor.execute(reset_committer,	(discover_alias(changed_alias['alias']),changed_alias['alias']))
+		cfg.db.commit
 
 	# Update the last fetched date, so we know where to start next time.
 
 	update_aliases_date = ("UPDATE settings SET value=%s "
 		"WHERE setting = 'aliases_processed'")
 
-	cursor.execute(update_aliases_date, (aliases_fetched, ))
-	db.commit()
+	cfg.cursor.execute(update_aliases_date, (aliases_fetched, ))
+	cfg.db.commit()
 
 	# Now rebuild the affiliation data
 
-	working_author = get_setting('working_author')
+	working_author = cfg.get_setting('working_author')
 
 	if working_author != 'done':
-		log_activity('Error','Trimming author data in affiliations: %s' %
+		cfg.log_activity('Error','Trimming author data in affiliations: %s' %
 			working_author)
 		trim_author(working_author)
 
@@ -315,8 +316,8 @@ def fill_empty_affiliations():
 		"SET recache=TRUE WHERE "
 		"author_affiliation IS NULL OR "
 		"committer_affiliation IS NULL")
-	cursor.execute(set_recache)
-	db.commit()
+	cfg.cursor.execute(set_recache)
+	cfg.db.commit()
 
 	# Find any authors with NULL affiliations and fill them
 
@@ -326,22 +327,22 @@ def fill_empty_affiliations():
 		"WHERE author_affiliation IS NULL "
 		"GROUP BY author_email")
 
-	cursor.execute(find_null_authors)
+	cfg.cursor.execute(find_null_authors)
 
-	null_authors = list(cursor)
+	null_authors = list(cfg.cursor)
 
-	log_activity('Debug','Found %s authors with NULL affiliation' %
+	cfg.log_activity('Debug','Found %s authors with NULL affiliation' %
 		len(null_authors))
 
 	for null_author in null_authors:
 
 		email = null_author['email']
 
-		store_working_author(email)
+		store_working_author(cfg, email)
 
 		discover_null_affiliations('author',email)
 
-	store_working_author('done')
+	store_working_author(cfg, 'done')
 
 	# Find any committers with NULL affiliations and fill them
 
@@ -351,18 +352,18 @@ def fill_empty_affiliations():
 		"WHERE committer_affiliation IS NULL "
 		"GROUP BY committer_email")
 
-	cursor.execute(find_null_committers)
+	cfg.cursor.execute(find_null_committers)
 
-	null_committers = list(cursor)
+	null_committers = list(cfg.cursor)
 
-	log_activity('Debug','Found %s committers with NULL affiliation' %
+	cfg.log_activity('Debug','Found %s committers with NULL affiliation' %
 		len(null_committers))
 
 	for null_committer in null_committers:
 
 		email = null_committer['email']
 
-		store_working_author(email)
+		store_working_author(cfg, email)
 
 		discover_null_affiliations('committer',email)
 
@@ -372,94 +373,94 @@ def fill_empty_affiliations():
 		"SET author_affiliation = '(Unknown)' "
 		"WHERE author_affiliation IS NULL")
 
-	cursor.execute(fill_unknown_author)
-	db.commit()
+	cfg.cursor.execute(fill_unknown_author)
+	cfg.db.commit()
 
 	fill_unknown_committer = ("UPDATE analysis_data "
 		"SET committer_affiliation = '(Unknown)' "
 		"WHERE committer_affiliation IS NULL")
 
-	cursor.execute(fill_unknown_committer)
-	db.commit()
+	cfg.cursor.execute(fill_unknown_committer)
+	cfg.db.commit()
 
-	store_working_author('done')
+	store_working_author(cfg, 'done')
 
-	log_activity('Info','Filling empty affiliations (complete)')
+	cfg.log_activity('Info','Filling empty affiliations (complete)')
 
-def invalidate_caches():
+def invalidate_caches(cfg):
 
 # Invalidate all caches
 
-	update_status('Invalidating caches')
-	log_activity('Info','Invalidating caches')
+	cfg.update_status('Invalidating caches')
+	cfg.log_activity('Info','Invalidating caches')
 
 	invalidate_cache = "UPDATE projects SET recache = TRUE"
-	cursor.execute(invalidate_cache)
-	db.commit()
+	cfg.cursor.execute(invalidate_cache)
+	cfg.db.commit()
 
-	log_activity('Info','Invalidating caches (complete)')
+	cfg.log_activity('Info','Invalidating caches (complete)')
 
-def rebuild_unknown_affiliation_and_web_caches():
+def rebuild_unknown_affiliation_and_web_caches(cfg):
 
 # When there's a lot of analysis data, calculating display data on the fly gets
 # pretty expensive. Instead, we crunch the data based upon the user's preferred
 # statistics (author or committer) and store them. We also store all records
 # with an (Unknown) affiliation for display to the user.
 
-	update_status('Caching data for display')
-	log_activity('Info','Caching unknown affiliations and web data for display')
+	cfg.update_status('Caching data for display')
+	cfg.log_activity('Info','Caching unknown affiliations and web data for display')
 
-	report_date = get_setting('report_date')
-	report_attribution = get_setting('report_attribution')
+	report_date = cfg.get_setting('report_date')
+	report_attribution = cfg.get_setting('report_attribution')
 
 	# Clear stale caches
 
 	clear_project_weekly_cache = ("DELETE c.* FROM project_weekly_cache c "
 		"JOIN projects p ON c.projects_id = p.id WHERE "
 		"p.recache=TRUE")
-	cursor.execute(clear_project_weekly_cache)
-	db.commit()
+	cfg.cursor.execute(clear_project_weekly_cache)
+	cfg.db.commit()
 
 	clear_project_monthly_cache = ("DELETE c.* FROM project_monthly_cache c "
 		"JOIN projects p ON c.projects_id = p.id WHERE "
 		"p.recache=TRUE")
-	cursor.execute(clear_project_monthly_cache)
-	db.commit()
+	cfg.cursor.execute(clear_project_monthly_cache)
+	cfg.db.commit()
 
 	clear_project_annual_cache = ("DELETE c.* FROM project_annual_cache c "
 		"JOIN projects p ON c.projects_id = p.id WHERE "
 		"p.recache=TRUE")
-	cursor.execute(clear_project_annual_cache)
-	db.commit()
+	cfg.cursor.execute(clear_project_annual_cache)
+	cfg.db.commit()
 
 	clear_repo_weekly_cache = ("DELETE c.* FROM repo_weekly_cache c "
 		"JOIN repos r ON c.repos_id = r.id "
 		"JOIN projects p ON r.projects_id = p.id WHERE "
 		"p.recache=TRUE")
-	cursor.execute(clear_repo_weekly_cache)
-	db.commit()
+	cfg.cursor.execute(clear_repo_weekly_cache)
+	cfg.db.commit()
 
 	clear_repo_monthly_cache = ("DELETE c.* FROM repo_monthly_cache c "
 		"JOIN repos r ON c.repos_id = r.id "
 		"JOIN projects p ON r.projects_id = p.id WHERE "
 		"p.recache=TRUE")
-	cursor.execute(clear_repo_monthly_cache)
-	db.commit()
+	cfg.cursor.execute(clear_repo_monthly_cache)
+	cfg.db.commit()
 
 	clear_repo_annual_cache = ("DELETE c.* FROM repo_annual_cache c "
 		"JOIN repos r ON c.repos_id = r.id "
 		"JOIN projects p ON r.projects_id = p.id WHERE "
 		"p.recache=TRUE")
-	cursor.execute(clear_repo_annual_cache)
-	db.commit()
+	cfg.cursor.execute(clear_repo_annual_cache)
+	cfg.db.commit()
 
 	clear_unknown_cache = ("DELETE c.* FROM unknown_cache c "
 		"JOIN projects p ON c.projects_id = p.id WHERE "
 		"p.recache=TRUE")
-	cursor.execute(clear_unknown_cache)
-	db.commit()
+	cfg.cursor.execute(clear_unknown_cache)
+	cfg.db.commit()
 
-	log_activity('Verbose','Caching unknown authors and committers')
+	cfg.log_activity('Verbose','Caching unknown authors and committers')
 
 	# Cache the unknown authors
 
@@ -476,8 +477,8 @@ def rebuild_unknown_affiliation_and_web_caches():
 		"AND p.recache = TRUE "
 		"GROUP BY r.projects_id,a.author_email")
 
-	cursor.execute(unknown_authors)
-	db.commit()
+	cfg.cursor.execute(unknown_authors)
+	cfg.db.commit()
 
 	# Cache the unknown committers
 
@@ -494,12 +495,12 @@ def rebuild_unknown_affiliation_and_web_caches():
 		"AND p.recache = TRUE "
 		"GROUP BY r.projects_id,a.committer_email")
 
-	cursor.execute(unknown_committers)
-	db.commit()
+	cfg.cursor.execute(unknown_committers)
+	cfg.db.commit()
 
 	# Start caching by project
 
-	log_activity('Verbose','Caching projects')
+	cfg.log_activity('Verbose','Caching projects')
 
 	cache_projects_by_week = ("INSERT INTO project_weekly_cache "
 		"SELECT r.projects_id AS projects_id, "
@@ -533,8 +534,8 @@ def rebuild_unknown_affiliation_and_web_caches():
 		% (report_attribution,report_attribution,
 		report_date,report_date,report_attribution))
 
-	cursor.execute(cache_projects_by_week)
-	db.commit()
+	cfg.cursor.execute(cache_projects_by_week)
+	cfg.db.commit()
 
 	cache_projects_by_month = ("INSERT INTO project_monthly_cache "
 		"SELECT r.projects_id AS projects_id, "
@@ -568,8 +569,8 @@ def rebuild_unknown_affiliation_and_web_caches():
 		% (report_attribution,report_attribution,
 		report_date,report_date,report_attribution))
 
-	cursor.execute(cache_projects_by_month)
-	db.commit()
+	cfg.cursor.execute(cache_projects_by_month)
+	cfg.db.commit()
 
 	cache_projects_by_year = ("INSERT INTO project_annual_cache "
 		"SELECT r.projects_id AS projects_id, "
@@ -601,12 +602,12 @@ def rebuild_unknown_affiliation_and_web_caches():
 		% (report_attribution,report_attribution,
 		report_date,report_attribution))
 
-	cursor.execute(cache_projects_by_year)
-	db.commit()
+	cfg.cursor.execute(cache_projects_by_year)
+	cfg.db.commit()
 
 	# Start caching by repo
 
-	log_activity('Verbose','Caching repos')
+	cfg.log_activity('Verbose','Caching repos')
 
 	cache_repos_by_week = ("INSERT INTO repo_weekly_cache "
 		"SELECT a.repos_id AS repos_id, "
@@ -640,8 +641,8 @@ def rebuild_unknown_affiliation_and_web_caches():
 		% (report_attribution,report_attribution,
 		report_date,report_date,report_attribution))
 
-	cursor.execute(cache_repos_by_week)
-	db.commit()
+	cfg.cursor.execute(cache_repos_by_week)
+	cfg.db.commit()
 
 	cache_repos_by_month = ("INSERT INTO repo_monthly_cache "
 		"SELECT a.repos_id AS repos_id, "
@@ -675,8 +676,8 @@ def rebuild_unknown_affiliation_and_web_caches():
 		% (report_attribution,report_attribution,
 		report_date,report_date,report_attribution))
 
-	cursor.execute(cache_repos_by_month)
-	db.commit()
+	cfg.cursor.execute(cache_repos_by_month)
+	cfg.db.commit()
 
 	cache_repos_by_year = ("INSERT INTO repo_annual_cache "
 		"SELECT a.repos_id AS repos_id, "
@@ -708,15 +709,15 @@ def rebuild_unknown_affiliation_and_web_caches():
 		% (report_attribution,report_attribution,
 		report_date,report_attribution))
 
-	cursor.execute(cache_repos_by_year)
-	db.commit()
+	cfg.cursor.execute(cache_repos_by_year)
+	cfg.db.commit()
 
 	# Reset cache flags
 
 	reset_recache = "UPDATE projects SET recache = FALSE"
-	cursor.execute(reset_recache)
-	db.commit()
+	cfg.cursor.execute(reset_recache)
+	cfg.db.commit()
 
-	log_activity('Info','Caching unknown affiliations and web data for display (complete)')
+	cfg.log_activity('Info','Caching unknown affiliations and web data for display (complete)')
 
 ### The real program starts here ###
