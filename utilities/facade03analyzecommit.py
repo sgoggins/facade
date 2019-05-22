@@ -42,7 +42,7 @@ else:
 	import MySQLdb
 
 
-def analyze_commit(cfg, db, repo_id, repo_loc, commit, multithreaded):
+def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 
 # This function analyzes a given commit, counting the additions, removals, and
 # whitespace changes. It collects all of the metadata about the commit, and
