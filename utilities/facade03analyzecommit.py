@@ -36,10 +36,10 @@ import os
 import getopt
 import xlsxwriter
 import configparser
-if platform.python_implementation() == 'PyPy':
-	import pymysql
-else:
-	import MySQLdb
+# if platform.python_implementation() == 'PyPy':
+# 	import pymysql
+# else:
+# 	import MySQLdb
 
 
 def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):

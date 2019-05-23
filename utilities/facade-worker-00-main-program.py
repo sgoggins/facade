@@ -50,12 +50,12 @@ from facade-worker-07-rebuild-cache.py import nuke_affiliations, fill_empty_affi
 
 
 
-if platform.python_implementation() == 'PyPy':
-	import pymysql
-else:
-	import MySQLdb
+# if platform.python_implementation() == 'PyPy':
+# 	import pymysql
+# else:
+# 	import MySQLdb
 
-global log_level
+# global log_level
 
 html = html.parser.HTMLParser()
 

@@ -36,10 +36,10 @@ import os
 import getopt
 import xlsxwriter
 import configparser
-if platform.python_implementation() == 'PyPy':
-	import pymysql
-else:
-	import MySQLdb
+# if platform.python_implementation() == 'PyPy':
+# 	import pymysql
+# else:
+# 	import MySQLdb
 
 
 

@@ -37,10 +37,10 @@ import getopt
 import xlsxwriter
 import configparser
 from facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author  
-if platform.python_implementation() == 'PyPy':
-    import pymysql
-else:
-    import MySQLdb
+# if platform.python_implementation() == 'PyPy':
+#     import pymysql
+# else:
+#     import MySQLdb
 
 def git_repo_initialize(cfg):
 

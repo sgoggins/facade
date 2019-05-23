@@ -36,11 +36,11 @@ import xlsxwriter
 import configparser
 import pymysql
 import psycopg2
-if platform.python_implementation() == 'PyPy':
-    import pymysql
-else:
-    import MySQLdb
-import sys
+# if platform.python_implementation() == 'PyPy':
+#     import pymysql
+# else:
+#     import MySQLdb
+# import sys
 # Important: Do not modify the database number unless you've also added an
 # update clause to update_db!
 
