@@ -199,7 +199,7 @@ def fill_empty_affiliations(cfg):
 
 	cfg.cursor.execute("SELECT current_timestamp(6) as fetched")
 
-	affiliations_fetched = cfg.cursor.fetchone()['fetched']
+	affiliations_fetched = cfg.cursor.fetchone()[0]#['fetched']
 
 	# Now find the last time we worked on affiliations, to figure out what's new
 
@@ -245,7 +245,7 @@ def fill_empty_affiliations(cfg):
 
 	cfg.cursor.execute("SELECT current_timestamp(6) as fetched")
 
-	aliases_fetched = cfg.cursor.fetchone()['fetched']
+	aliases_fetched = cfg.cursor.fetchone()[0]#['fetched']
 
 	# Now find the last time we worked on aliases, to figure out what's new
 
@@ -310,12 +310,22 @@ def fill_empty_affiliations(cfg):
 
 	# Figure out which projects have NULL affiliations so they can be recached
 
-	set_recache = ("UPDATE projects p "
-		"JOIN repos r ON p.id = r.projects_id "
-		"JOIN analysis_data a ON r.id = a.repos_id "
-		"SET recache=TRUE WHERE "
-		"author_affiliation IS NULL OR "
-		"committer_affiliation IS NULL")
+	set_recache = ("""UPDATE projects 
+				SET recache=TRUE  
+				FROM projects x, repos y, analysis_data z 
+				where x.id = y.projects_id 
+				and
+				y."id" = z.repos_id
+				and 
+        (z.author_affiliation IS NULL OR 
+        z.committer_affiliation IS NULL)""")
+
+	# ("UPDATE projects p "
+	# 	"JOIN repos r ON p.id = r.projects_id "
+	# 	"JOIN analysis_data a ON r.id = a.repos_id "
+	# 	"SET recache=TRUE WHERE "
+	# 	"author_affiliation IS NULL OR "
+	# 	"committer_affiliation IS NULL")
 	cfg.cursor.execute(set_recache)
 	cfg.db.commit()
 
@@ -415,48 +425,117 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 
 	# Clear stale caches
 
-	clear_project_weekly_cache = ("DELETE c.* FROM project_weekly_cache c "
-		"JOIN projects p ON c.projects_id = p.id WHERE "
-		"p.recache=TRUE")
+	clear_project_weekly_cache = ("""
+			DELETE 
+				FROM
+					project_weekly_cache C USING projects P 
+				WHERE
+					P.ID = C.projects_id 
+					AND P.recache = TRUE
+		""")
+
+	# ("DELETE c.* FROM project_weekly_cache c "
+	# 	"JOIN projects p ON c.projects_id = p.id WHERE "
+	# 	"p.recache=TRUE")
 	cfg.cursor.execute(clear_project_weekly_cache)
 	cfg.db.commit()
 
-	clear_project_monthly_cache = ("DELETE c.* FROM project_monthly_cache c "
-		"JOIN projects p ON c.projects_id = p.id WHERE "
-		"p.recache=TRUE")
+	clear_project_monthly_cache = ("""
+			DELETE 
+				FROM
+					project_monthly_cache C USING projects P 
+				WHERE
+					P.ID = C.projects_id 
+					AND P.recache = TRUE
+		""")
+
+	# ("DELETE c.* FROM project_monthly_cache c "
+	# 	"JOIN projects p ON c.projects_id = p.id WHERE "
+	# 	"p.recache=TRUE")
 	cfg.cursor.execute(clear_project_monthly_cache)
 	cfg.db.commit()
 
-	clear_project_annual_cache = ("DELETE c.* FROM project_annual_cache c "
-		"JOIN projects p ON c.projects_id = p.id WHERE "
-		"p.recache=TRUE")
+	clear_project_annual_cache = ("""
+			DELETE 
+				FROM
+					project_annual_cache C USING projects P 
+				WHERE
+					P.ID = C.projects_id 
+					AND P.recache = TRUE
+		""")
+
+	# ("DELETE c.* FROM project_annual_cache c "
+	# 	"JOIN projects p ON c.projects_id = p.id WHERE "
+	# 	"p.recache=TRUE")
 	cfg.cursor.execute(clear_project_annual_cache)
 	cfg.db.commit()
 
-	clear_repo_weekly_cache = ("DELETE c.* FROM repo_weekly_cache c "
-		"JOIN repos r ON c.repos_id = r.id "
-		"JOIN projects p ON r.projects_id = p.id WHERE "
-		"p.recache=TRUE")
+	clear_repo_weekly_cache = ("""
+			DELETE 
+				FROM
+					repo_weekly_cache C USING repos r,
+					projects P 
+				WHERE
+					C.repos_id = r.ID 
+					AND P.ID = r.projects_id 
+					AND P.recache = TRUE
+		""")
+
+	# ("DELETE c.* FROM repo_weekly_cache c "
+	# 	"JOIN repos r ON c.repos_id = r.id "
+	# 	"JOIN projects p ON r.projects_id = p.id WHERE "
+	# 	"p.recache=TRUE")
 	cfg.cursor.execute(clear_repo_weekly_cache)
 	cfg.db.commit()
 
-	clear_repo_monthly_cache = ("DELETE c.* FROM repo_monthly_cache c "
-		"JOIN repos r ON c.repos_id = r.id "
-		"JOIN projects p ON r.projects_id = p.id WHERE "
-		"p.recache=TRUE")
+	clear_repo_monthly_cache = ("""
+			DELETE 
+				FROM
+					repo_monthly_cache C USING repos r,
+					projects P 
+				WHERE
+					C.repos_id = r.ID 
+					AND P.ID = r.projects_id 
+					AND P.recache = TRUE
+		""")
+
+	# ("DELETE c.* FROM repo_monthly_cache c "
+	# 	"JOIN repos r ON c.repos_id = r.id "
+	# 	"JOIN projects p ON r.projects_id = p.id WHERE "
+	# 	"p.recache=TRUE")
 	cfg.cursor.execute(clear_repo_monthly_cache)
 	cfg.db.commit()
 
-	clear_repo_annual_cache = ("DELETE c.* FROM repo_annual_cache c "
-		"JOIN repos r ON c.repos_id = r.id "
-		"JOIN projects p ON r.projects_id = p.id WHERE "
-		"p.recache=TRUE")
+	clear_repo_annual_cache = ("""
+			DELETE 
+				FROM
+					repo_annual_cache C USING repos r,
+					projects P 
+				WHERE
+					C.repos_id = r.ID 
+					AND P.ID = r.projects_id 
+					AND P.recache = TRUE
+		""")
+
+	# ("DELETE c.* FROM repo_annual_cache c "
+	# 	"JOIN repos r ON c.repos_id = r.id "
+	# 	"JOIN projects p ON r.projects_id = p.id WHERE "
+	# 	"p.recache=TRUE")
 	cfg.cursor.execute(clear_repo_annual_cache)
 	cfg.db.commit()
 
-	clear_unknown_cache = ("DELETE c.* FROM unknown_cache c "
-		"JOIN projects p ON c.projects_id = p.id WHERE "
-		"p.recache=TRUE")
+	clear_unknown_cache = ("""
+			DELETE 
+				FROM
+					unknown_cache C USING projects P 
+				WHERE
+					P.ID = C.projects_id 
+					AND P.recache = TRUE
+		""")
+
+	# ("DELETE c.* FROM unknown_cache c "
+	# 	"JOIN projects p ON c.projects_id = p.id WHERE "
+	# 	"p.recache=TRUE")
 	cfg.cursor.execute(clear_unknown_cache)
 	cfg.db.commit()
 
@@ -468,7 +547,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		"SELECT 'author', "
 		"r.projects_id, "
 		"a.author_email, "
-		"SUBSTRING_INDEX(a.author_email,'@',-1), "
+		"SPLIT_PART(a.author_email,'@',-1), "
 		"SUM(a.added) "
 		"FROM analysis_data a "
 		"JOIN repos r ON r.id = a.repos_id "
@@ -486,7 +565,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		"SELECT 'committer', "
 		"r.projects_id, "
 		"a.committer_email, "
-		"SUBSTRING_INDEX(a.committer_email,'@',-1), "
+		"SPLIT_PART(a.committer_email,'@',-1), "
 		"SUM(a.added) "
 		"FROM analysis_data a "
 		"JOIN repos r ON r.id = a.repos_id "

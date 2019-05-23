@@ -234,7 +234,7 @@ current_status = cfg.get_setting('utility_status')
 if current_status != 'Idle':
 	cfg.log_activity('Error','Something is already running, aborting maintenance '
 		'and analysis.\nIt is unsafe to continue.')
-	sys.exit(1)
+	# sys.exit(1)
 
 if len(repo_base_directory) == 0:
 	cfg.log_activity('Error','No base directory. It is unsafe to continue.')

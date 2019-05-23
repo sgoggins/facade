@@ -78,39 +78,40 @@ def analysis(cfg, multithreaded):
 	cfg.cursor.execute(repo_list)
 	repos = list(cfg.cursor)
 
-	for repo in repos:
 
-		update_analysis_log(repo['id'],'Beginning analysis')
-		cfg.log_activity('Verbose','Analyzing repo: %s (%s)' % (repo['id'],repo['name']))
+	for repo in repos:
+		print(repo)
+		update_analysis_log(repo[0],'Beginning analysis')
+		cfg.log_activity('Verbose','Analyzing repo: %s (%s)' % (repo[0],repo[3]))
 
 		# First we check to see if the previous analysis didn't complete
 
 		get_status = ("SELECT working_commit FROM working_commits WHERE repos_id=%s")
 
-		cfg.cursor.execute(get_status, (repo['id'], ))
+		cfg.cursor.execute(get_status, (repo[0], ))
 		working_commits = list(cfg.cursor)
-		#cfg.cursor.fetchone()['working_commit']
+		#cfg.cursor.fetchone()[1]
 
 		# If there's a commit still there, the previous run was interrupted and
 		# the commit data may be incomplete. It should be trimmed, just in case.
 		for commit in working_commits:
-			trim_commit(cfg, repo['id'],commit['working_commit'])
+			trim_commit(cfg, repo[0],commit[0])
 
 			# Remove the working commit.
 			remove_commit = ("DELETE FROM working_commits "
 				"WHERE repos_id = %s AND working_commit = %s")
-			cfg.cursor.execute(remove_commit, (repo['id'],commit['working_commit']))
+			cfg.cursor.execute(remove_commit, (repo[0],commit[0]))
 			cfg.db.commit()
 
-			cfg.log_activity('Debug','Removed working commit: %s' % commit['working_commit'])
+			cfg.log_activity('Debug','Removed working commit: %s' % commit[0])
 
 		# Start the main analysis
 
-		update_analysis_log(repo['id'],'Collecting data')
+		update_analysis_log(repo[0],'Collecting data')
 
 		repo_loc = ('%s%s/%s%s/.git' % (cfg.repo_base_directory,
-			repo["projects_id"], repo["path"],
-			repo["name"]))
+			repo[1], repo[2],
+			repo[3]))
 		# Grab the parents of HEAD
 
 		parents = subprocess.Popen(["git --git-dir %s log --ignore-missing "
@@ -131,17 +132,17 @@ def analysis(cfg, multithreaded):
 
 		find_existing = ("SELECT DISTINCT commit FROM analysis_data WHERE repos_id=%s")
 
-		cfg.cursor.execute(find_existing, (repo['id'], ))
+		cfg.cursor.execute(find_existing, (repo[0], ))
 
 		for commit in list(cfg.cursor):
-			existing_commits.add(commit['commit'])
+			existing_commits.add(commit[0])
 
 		# Find missing commits and add them
 
 		missing_commits = parent_commits - existing_commits
 
 		cfg.log_activity('Debug','Commits missing from repo %s: %s' %
-			(repo['id'],len(missing_commits)))
+			(repo[0],len(missing_commits)))
 
 		if multithreaded:
 
@@ -151,36 +152,36 @@ def analysis(cfg, multithreaded):
 
 			for commit in missing_commits:
 
-				result = pool.apply_async(analyze_commit(cfg, repo['id'], repo_loc, commit, multithreaded))
+				result = pool.apply_async(analyze_commit(cfg, repo[0], repo_loc, commit, multithreaded))
 
 			pool.close()
 			pool.join()
 
 		else:
 			for commit in missing_commits:
-				analyze_commit(cfg, repo['id'], repo_loc, commit, multithreaded)
+				analyze_commit(cfg, repo[0], repo_loc, commit, multithreaded)
 
-		update_analysis_log(repo['id'],'Data collection complete')
+		update_analysis_log(repo[0],'Data collection complete')
 
-		update_analysis_log(repo['id'],'Beginning to trim commits')
+		update_analysis_log(repo[0],'Beginning to trim commits')
 
 		# Find commits which are out of the analysis range
 
 		trimmed_commits = existing_commits - parent_commits
 
 		cfg.log_activity('Debug','Commits to be trimmed from repo %s: %s' %
-			(repo['id'],len(trimmed_commits)))
+			(repo[0],len(trimmed_commits)))
 
 		for commit in trimmed_commits:
 
-			trim_commit(cfg, repo['id'],commit)
+			trim_commit(cfg, repo[0],commit)
 
 		set_complete = "UPDATE repos SET status='Complete' WHERE id=%s and status != 'Empty'"
 
-		cfg.cursor.execute(set_complete, (repo['id'], ))
+		cfg.cursor.execute(set_complete, (repo[0], ))
 
-		update_analysis_log(repo['id'],'Commit trimming complete')
+		update_analysis_log(repo[0],'Commit trimming complete')
 
-		update_analysis_log(repo['id'],'Complete')
+		update_analysis_log(repo[0],'Complete')
 
 	cfg.log_activity('Info','Running analysis (complete)')

@@ -79,7 +79,7 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 		fetch_canonical = ("SELECT canonical "
 			"FROM aliases "
 			"WHERE alias=%s "
-			"AND active = TRUE")
+			"AND active = 1")
 
 		cursor_people_local.execute(fetch_canonical, (email, ))
 		db_people_local.commit()
@@ -88,7 +88,7 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 
 		if canonical:
 			for email in canonical:
-				return email['canonical']
+				return email[0]
 		else:
 			return email
 
