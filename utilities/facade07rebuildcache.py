@@ -164,7 +164,7 @@ def fill_empty_affiliations(cfg):
 					"AND %s_date >= %%s" %
 					(attribution, attribution, attribution, attribution))
 
-				cfg.cursor.execute(update, (match['affiliation'], email, match['start_date']))
+				cfg.cursor.execute(update, (match[0], email, match[1]))
 				cfg.db.commit()
 
 	def discover_alias(email):
@@ -183,7 +183,7 @@ def fill_empty_affiliations(cfg):
 
 		if canonical:
 			for email in canonical:
-				return email['canonical']
+				return email[0]
 		else:
 			return email
 
@@ -217,18 +217,18 @@ def fill_empty_affiliations(cfg):
 	for changed_affiliation in changed_affiliations:
 
 		cfg.log_activity('Debug','Resetting affiliation for %s' %
-			changed_affiliation['domain'])
+			changed_affiliation[0])
 
 		set_author_to_null = ("UPDATE analysis_data SET author_affiliation = NULL "
 			"WHERE author_email LIKE CONCAT('%%',%s)")
 
-		cfg.cursor.execute(set_author_to_null, (changed_affiliation['domain'], ))
+		cfg.cursor.execute(set_author_to_null, (changed_affiliation[0], ))
 		cfg.db.commit()
 
 		set_committer_to_null = ("UPDATE analysis_data SET committer_affiliation = NULL "
 			"WHERE committer_email LIKE CONCAT('%%',%s)")
 
-		cfg.cursor.execute(set_committer_to_null, (changed_affiliation['domain'], ))
+		cfg.cursor.execute(set_committer_to_null, (changed_affiliation[0], ))
 		cfg.db.commit()
 
 	# Update the last fetched date, so we know where to start next time.
@@ -263,32 +263,32 @@ def fill_empty_affiliations(cfg):
 	for changed_alias in changed_aliases:
 
 		cfg.log_activity('Debug','Resetting affiliation for %s' %
-			changed_alias['alias'])
+			changed_alias[0])
 
 		set_author_to_null = ("UPDATE analysis_data SET author_affiliation = NULL "
 			"WHERE author_raw_email LIKE CONCAT('%%',%s)")
 
-		cfg.cursor.execute(set_author_to_null,(changed_alias['alias'], ))
+		cfg.cursor.execute(set_author_to_null,(changed_alias[0], ))
 		cfg.db.commit()
 
 		set_committer_to_null = ("UPDATE analysis_data SET committer_affiliation = NULL "
 			"WHERE committer_raw_email LIKE CONCAT('%%',%s)")
 
-		cfg.cursor.execute(set_committer_to_null, (changed_alias['alias'], ))
+		cfg.cursor.execute(set_committer_to_null, (changed_alias[0], ))
 		cfg.db.commit()
 
 		reset_author = ("UPDATE analysis_data "
 			"SET author_email = %s "
 			"WHERE author_raw_email = %s")
 
-		cfg.cursor.execute(reset_author, (discover_alias(changed_alias['alias']),changed_alias['alias']))
+		cfg.cursor.execute(reset_author, (discover_alias(changed_alias[0]),changed_alias[0]))
 		cfg.db.commit
 
 		reset_committer = ("UPDATE analysis_data "
 			"SET committer_email = %s "
 			"WHERE committer_raw_email = %s")
 
-		cfg.cursor.execute(reset_committer,	(discover_alias(changed_alias['alias']),changed_alias['alias']))
+		cfg.cursor.execute(reset_committer,	(discover_alias(changed_alias[0]),changed_alias[0]))
 		cfg.db.commit
 
 	# Update the last fetched date, so we know where to start next time.
@@ -346,7 +346,7 @@ def fill_empty_affiliations(cfg):
 
 	for null_author in null_authors:
 
-		email = null_author['email']
+		email = null_author[0]
 
 		store_working_author(cfg, email)
 
@@ -371,7 +371,7 @@ def fill_empty_affiliations(cfg):
 
 	for null_committer in null_committers:
 
-		email = null_committer['email']
+		email = null_committer[0]
 
 		store_working_author(cfg, email)
 
