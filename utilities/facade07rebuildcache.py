@@ -609,7 +609,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		"year, "
 		"affiliation, "
 		"a.%s_email,"
-		"projects_id"
+		"r.projects_id"
 		% (report_attribution,report_attribution,
 		report_date,report_date,report_attribution))
 
@@ -644,7 +644,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		"year, "
 		"affiliation, "
 		"a.%s_email,"
-		"projects_id"
+		"r.projects_id"
 		% (report_attribution,report_attribution,
 		report_date,report_date,report_attribution))
 
@@ -677,7 +677,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		"GROUP BY year, "
 		"affiliation, "
 		"a.%s_email,"
-		"projects_id"
+		"r.projects_id"
 		% (report_attribution,report_attribution,
 		report_date,report_attribution))
 
@@ -716,7 +716,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		"year, "
 		"affiliation, "
 		"a.%s_email,"
-		"repos_id"
+		"a.repos_id"
 		% (report_attribution,report_attribution,
 		report_date,report_date,report_attribution))
 
@@ -751,7 +751,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		"year, "
 		"affiliation, "
 		"a.%s_email,"
-		"repos_id"
+		"a.repos_id"
 		% (report_attribution,report_attribution,
 		report_date,report_date,report_attribution))
 
@@ -784,7 +784,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		"GROUP BY year, "
 		"affiliation, "
 		"a.%s_email,"
-		"repos_id"
+		"a.repos_id"
 		% (report_attribution,report_attribution,
 		report_date,report_attribution))
 
