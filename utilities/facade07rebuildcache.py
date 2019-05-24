@@ -95,7 +95,7 @@ def fill_empty_affiliations(cfg):
 		find_exact_match = ("SELECT affiliation,start_date "
 			"FROM affiliations "
 			"WHERE domain = %s "
-			"AND active = TRUE "
+			"AND active = 1 "
 			"ORDER BY start_date DESC")
 
 		cfg.cursor_people.execute(find_exact_match, (email, ))
@@ -120,7 +120,7 @@ def fill_empty_affiliations(cfg):
 			find_exact_domain = ("SELECT affiliation,start_date "
 				"FROM affiliations "
 				"WHERE domain= %s "
-				"AND active = TRUE "
+				"AND active = 1 "
 				"ORDER BY start_date DESC")
 
 			cfg.cursor_people.execute(find_exact_domain, (domain, ))
@@ -135,7 +135,7 @@ def fill_empty_affiliations(cfg):
 			find_domain = ("SELECT affiliation,start_date "
 				"FROM affiliations "
 				"WHERE domain = %s "
-				"AND active = TRUE "
+				"AND active = 1 "
 				"ORDER BY start_date DESC")
 
 			cfg.cursor_people.execute(find_domain, (domain[domain.rfind('.',0,domain.rfind('.',0))+1:], ))
@@ -174,7 +174,7 @@ def fill_empty_affiliations(cfg):
 		fetch_canonical = ("SELECT canonical "
 			"FROM aliases "
 			"WHERE alias=%s "
-			"AND active = TRUE")
+			"AND active = 1")
 
 		cfg.cursor_people.execute(fetch_canonical, (email, ))
 		cfg.db_people.commit()
