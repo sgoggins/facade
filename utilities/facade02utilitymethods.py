@@ -57,9 +57,9 @@ def trim_commit(cfg, repo_id,commit):
 
 # Quickly remove a given commit
 
-	remove_commit = ("DELETE FROM analysis_data "
-		"WHERE repos_id=%s "
-		"AND commit=%s")
+	remove_commit = ("DELETE FROM commits "
+		"WHERE repo_id=%s "
+		"AND cmt_commit_hash=%s")
 
 	cfg.cursor.execute(remove_commit, (repo_id, commit))
 	cfg.db.commit()
@@ -85,16 +85,16 @@ def trim_author(cfg, email):
 # Remove the affiliations associated with an email. Used when an analysis is
 # interrupted during affiliation layering, and the data will be corrupt.
 
-	trim = ("UPDATE analysis_data "
-		"SET author_affiliation = NULL "
-		"WHERE author_email = %s")
+	trim = ("UPDATE commits "
+		"SET cmt_author_affiliation = NULL "
+		"WHERE cmt_author_email = %s")
 
 	cfg.cursor.execute(trim, (email, ))
 	cfg.db.commit()
 
-	trim = ("UPDATE analysis_data "
-		"SET committer_affiliation = NULL "
-		"WHERE committer_email = %s")
+	trim = ("UPDATE commits "
+		"SET cmt_committer_affiliation = NULL "
+		"WHERE cmt_committer_email = %s")
 
 	cfg.cursor.execute(trim, (email, ))
 	cfg.db.commit()

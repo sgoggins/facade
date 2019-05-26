@@ -274,7 +274,7 @@ class Config:
 
 
         # if platform.python_implementation() == 'PyPy':
-        db_schema = 'facade'
+        db_schema = 'augur_data'
         db = psycopg2.connect(
             host = db_host,
             user = db_user,

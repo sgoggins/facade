@@ -49,7 +49,7 @@ def git_repo_initialize(cfg):
     cfg.update_status('Fetching new repos')
     cfg.log_activity('Info','Fetching new repos')
 
-    query = "SELECT id,projects_id,git FROM repos WHERE status LIKE 'New%'";
+    query = "SELECT repo_id,repo_group_id,repo_git FROM repo WHERE repo_status LIKE 'New%'";
     cfg.cursor.execute(query)
 
     new_repos = list(cfg.cursor)
@@ -76,7 +76,7 @@ def git_repo_initialize(cfg):
             repo_name = repo_name[:repo_name.find('.git',0)]
 
         # Check if there will be a storage path collision
-        query = ("SELECT NULL FROM repos WHERE CONCAT(projects_id,'/',path,name) = %s")
+        query = ("SELECT NULL FROM repo WHERE CONCAT(repo_group_id,'/',repo_path,repo_name) = %s")
         cfg.cursor.execute(query, ('{}/{}{}'.format(row[1], repo_relative_path, repo_name), ))
         cfg.db.commit()
 
@@ -114,8 +114,8 @@ def git_repo_initialize(cfg):
 
         update_repo_log(cfg, row[0],'New (cloning)')
 
-        query = ("UPDATE repos SET status='New (Initializing)', path=%s, "
-            "name=%s WHERE id=%s")
+        query = ("UPDATE repo SET repo_status='New (Initializing)', repo_path=%s, "
+            "repo_name=%s WHERE repo_id=%s")
 
         cfg.cursor.execute(query, (repo_relative_path,repo_name,row[0]))
         cfg.db.commit()
@@ -130,14 +130,14 @@ def git_repo_initialize(cfg):
             # Mark the entire project for an update, so that under normal
             # circumstances caches are rebuilt only once per waiting period.
 
-            update_project_status = ("UPDATE repos SET status='Update' WHERE "
-                "projects_id=%s AND status != 'Empty'")
+            update_project_status = ("UPDATE repo SET repo_status='Update' WHERE "
+                "repo_group_id=%s AND repo_status != 'Empty'")
             cfg.cursor.execute(update_project_status, (row[1], ))
             cfg.db.commit()
 
             # Since we just cloned the new repo, set it straight to analyze.
-            query = ("UPDATE repos SET status='Analyze',path=%s, name=%s "
-                "WHERE id=%s and status != 'Empty'")
+            query = ("UPDATE repo SET repo_status='Analyze',repo_path=%s, repo_name=%s "
+                "WHERE repo_id=%s and repo_status != 'Empty'")
 
             cfg.cursor.execute(query, (repo_relative_path,repo_name,row[0]))
             cfg.db.commit()
@@ -149,7 +149,7 @@ def git_repo_initialize(cfg):
             # If cloning failed, log it and set the status back to new
             cfg.update_repo_log(cfg, row[0],'Failed (%s)' % return_code)
 
-            query = ("UPDATE repos SET status='New (failed)' WHERE id=%s")
+            query = ("UPDATE repo SET repo_status='New (failed)' WHERE repo_id=%s")
 
             cfg.cursor.execute(query, (row[0], ))
             cfg.db.commit()
@@ -169,9 +169,9 @@ def check_for_repo_updates(cfg):
 
     update_frequency = cfg.get_setting('update_frequency')
 
-    get_initialized_repos = ("SELECT id FROM repos WHERE status NOT LIKE 'New%' "
-        "AND status != 'Delete' "
-        "AND status != 'Analyze' AND status != 'Empty'")
+    get_initialized_repos = ("SELECT repo_id FROM repo WHERE repo_status NOT LIKE 'New%' "
+        "AND repo_status != 'Delete' "
+        "AND repo_status != 'Analyze' AND repo_status != 'Empty'")
     cfg.cursor.execute(get_initialized_repos)
     repos = list(cfg.cursor)
 
@@ -189,12 +189,12 @@ def check_for_repo_updates(cfg):
         # project once per waiting period.
 
         if cfg.cursor.rowcount == 0:
-            mark_repo = ("""UPDATE repos 
-                SET status='Update' 
-                        WHERE repos.ctid IN (
-                SELECT repos.ctid FROM repos JOIN projects ON repos.projects_id=projects.id
-                AND repos.id=%s 
-                AND repos.status != 'Empty')""")
+            mark_repo = ("""UPDATE repo
+                SET repo_status='Update' 
+                        WHERE repo.ctid IN (
+                SELECT repo.ctid FROM repo JOIN repo_groups ON repo.repo_group_id=repo_groups.repo_group_id
+                AND repo.repo_id=%s 
+                AND repo.repo_status != 'Empty')""")
 
 
             # ("UPDATE repos r JOIN projects p ON p.id = r.projects_id "
@@ -206,13 +206,13 @@ def check_for_repo_updates(cfg):
     # Mark the entire project for an update, so that under normal
     # circumstances caches are rebuilt only once per waiting period.
 
-    update_project_status = ("""UPDATE repos 
-        SET status='Update' 
-                WHERE repos.ctid IN (
-        SELECT repos.ctid FROM repos LEFT JOIN repos a ON repos.projects_id=a.projects_id
-        AND repos.status='Update'
-        AND repos.status != 'Analyze' 
-        AND repos.status != 'Empty')""")
+    update_project_status = ("""UPDATE repo
+        SET repo_status='Update' 
+                WHERE repo.ctid IN (
+        SELECT repo.ctid FROM repo LEFT JOIN repo a ON repo.repo_group_id=a.repo_group_id
+        AND repo.repo_status='Update'
+        AND repo.repo_status != 'Analyze' 
+        AND repo.repo_status != 'Empty')""")
 
 
     # ("UPDATE repos r LEFT JOIN repos s ON r.projects_id=s.projects_id "
@@ -230,8 +230,8 @@ def force_repo_updates(cfg):
     cfg.update_status('Forcing all non-new repos to update')
     cfg.log_activity('Info','Forcing repos to update')
 
-    get_repo_ids = ("UPDATE repos SET status='Update' WHERE status "
-        "NOT LIKE 'New%' AND STATUS!='Delete' AND STATUS !='Empty'")
+    get_repo_ids = ("UPDATE repo SET repo_status='Update' WHERE repo_status "
+        "NOT LIKE 'New%' AND repo_status!='Delete' AND repo_status !='Empty'")
     cfg.cursor.execute(get_repo_ids)
     cfg.db.commit()
 
@@ -244,8 +244,8 @@ def force_repo_analysis(cfg):
     cfg.update_status('Forcing all non-new repos to be analyzed')
     cfg.log_activity('Info','Forcing repos to be analyzed')
 
-    set_to_analyze = ("UPDATE repos SET status='Analyze' WHERE status "
-        "NOT LIKE 'New%' AND STATUS!='Delete' AND STATUS != 'Empty'")
+    set_to_analyze = ("UPDATE repo SET repo_status='Analyze' WHERE repo_status "
+        "NOT LIKE 'New%' AND repo_status!='Delete' AND repo_status != 'Empty'")
     cfg.cursor.execute(set_to_analyze)
     cfg.db.commit()
 
@@ -260,8 +260,8 @@ def git_repo_updates(cfg):
 
     cfg.repo_base_directory = cfg.get_setting('repo_directory')
 
-    query = ("SELECT id,projects_id,git,name,path FROM repos WHERE "
-        "status='Update'");
+    query = ("SELECT repo_id,repo_group_id,repo_git,repo_name,repo_path FROM repo WHERE "
+        "repo_status='Update'");
     cfg.cursor.execute(query)
 
     existing_repos = list(cfg.cursor)
@@ -307,7 +307,7 @@ def git_repo_updates(cfg):
 
         if return_code == 0:
 
-            set_to_analyze = "UPDATE repos SET status='Analyze' WHERE id=%s"
+            set_to_analyze = "UPDATE repo SET repo_status='Analyze' WHERE repo_id=%s"
             cfg.cursor.execute(set_to_analyze, (row[0], ))
             cfg.db.commit()
 

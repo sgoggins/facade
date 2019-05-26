@@ -76,10 +76,10 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 	def discover_alias(email):
 
 	# Match aliases with their canonical email
-		fetch_canonical = ("SELECT canonical "
-			"FROM aliases "
-			"WHERE alias=%s "
-			"AND active = 1")
+		fetch_canonical = ("SELECT canonical_email "
+			"FROM contributors_aliases "
+			"WHERE alias_email=%s "
+			"AND cntrb_active = 1")
 
 		cursor_people_local.execute(fetch_canonical, (email, ))
 		db_people_local.commit()
@@ -107,10 +107,10 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 		author_email = strip_extra_amp(author_email)
 		committer_email = strip_extra_amp(committer_email)
 
-		store = ("INSERT INTO analysis_data (repos_id,commit,filename,"
-			"author_name,author_raw_email,author_email,author_date,"
-			"committer_name,committer_raw_email,committer_email,committer_date,"
-			"added,removed,whitespace) "
+		store = ("INSERT INTO commits (repo_id,cmt_commit_hash,cmt_filename,"
+			"cmt_author_name,cmt_author_raw_email,cmt_author_email,cmt_author_date,"
+			"cmt_committer_name,cmt_committer_raw_email,cmt_committer_email,cmt_committer_date,"
+			"cmt_added,cmt_removed,cmt_whitespace) "
 			"VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)")
 
 		cursor_local.execute(store, (

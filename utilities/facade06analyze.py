@@ -74,7 +74,7 @@ def analysis(cfg, multithreaded):
 
 	start_date = cfg.get_setting('start_date')
 
-	repo_list = "SELECT id,projects_id,path,name FROM repos WHERE status='Analyze'"
+	repo_list = "SELECT repo_id,repo_group_id,repo_path,repo_name FROM repo WHERE repo_status='Analyze'"
 	cfg.cursor.execute(repo_list)
 	repos = list(cfg.cursor)
 
@@ -130,7 +130,7 @@ def analysis(cfg, multithreaded):
 
 		existing_commits = set()
 
-		find_existing = ("SELECT DISTINCT commit FROM analysis_data WHERE repos_id=%s")
+		find_existing = ("SELECT DISTINCT cmt_commit_hash FROM commits WHERE repo_id=%s")
 
 		cfg.cursor.execute(find_existing, (repo[0], ))
 
@@ -176,7 +176,7 @@ def analysis(cfg, multithreaded):
 
 			trim_commit(cfg, repo[0],commit)
 
-		set_complete = "UPDATE repos SET status='Complete' WHERE id=%s and status != 'Empty'"
+		set_complete = "UPDATE repo SET repo_status='Complete' WHERE repo_id=%s and repo_status != 'Empty'"
 
 		cfg.cursor.execute(set_complete, (repo[0], ))
 

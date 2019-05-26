@@ -54,8 +54,8 @@ def nuke_affiliations(cfg):
 
 	cfg.log_activity('Info','Nuking affiliations')
 
-	nuke = ("UPDATE analysis_data SET author_affiliation = NULL, "
-			"committer_affiliation = NULL")
+	nuke = ("UPDATE commits SET cmt_author_affiliation = NULL, "
+			"cmt_committer_affiliation = NULL")
 
 	cfg.cursor.execute(nuke)
 	cfg.db.commit()
@@ -72,11 +72,11 @@ def fill_empty_affiliations(cfg):
 
 	def update_affiliation(email_type,email,affiliation,start_date):
 
-		update = ("UPDATE analysis_data "
-			"SET %s_affiliation = %%s "
-			"WHERE %s_email = %%s "
-			"AND %s_affiliation IS NULL "
-			"AND %s_date >= %%s" %
+		update = ("UPDATE commits "
+			"SET cmt_%s_affiliation = %%s "
+			"WHERE cmt_%s_email = %%s "
+			"AND cmt_%s_affiliation IS NULL "
+			"AND cmt_%s_date >= %%s" %
 			(email_type, email_type, email_type, email_type))
 
 		cfg.cursor.execute(update, (affiliation, email, start_date))
@@ -157,11 +157,11 @@ def fill_empty_affiliations(cfg):
 			cfg.log_activity('Debug','Found domain match for %s' % email)
 
 			for match in matches:
-				update = ("UPDATE analysis_data "
-					"SET %s_affiliation = %%s "
-					"WHERE %s_email = %%s "
-					"AND %s_affiliation IS NULL "
-					"AND %s_date >= %%s" %
+				update = ("UPDATE commits "
+					"SET cmt_%s_affiliation = %%s "
+					"WHERE cmt_%s_email = %%s "
+					"AND cmt_%s_affiliation IS NULL "
+					"AND cmt_%s_date >= %%s" %
 					(attribution, attribution, attribution, attribution))
 
 				cfg.cursor.execute(update, (match[0], email, match[1]))
@@ -193,7 +193,7 @@ def fill_empty_affiliations(cfg):
 	cfg.log_activity('Info','Filling empty affiliations')
 
 	# Process any changes to the affiliations or aliases, and set any existing
-	# entries in analysis_data to NULL so they are filled properly.
+	# entries in commits to NULL so they are filled properly.
 
 	# First, get the time we started fetching since we'll need it later
 
@@ -219,13 +219,13 @@ def fill_empty_affiliations(cfg):
 		cfg.log_activity('Debug','Resetting affiliation for %s' %
 			changed_affiliation[0])
 
-		set_author_to_null = ("UPDATE analysis_data SET author_affiliation = NULL "
+		set_author_to_null = ("UPDATE commits SET cmt_author_affiliation = NULL "
 			"WHERE author_email LIKE CONCAT('%%',%s)")
 
 		cfg.cursor.execute(set_author_to_null, (changed_affiliation[0], ))
 		cfg.db.commit()
 
-		set_committer_to_null = ("UPDATE analysis_data SET committer_affiliation = NULL "
+		set_committer_to_null = ("UPDATE commits SET cmt_committer_affiliation = NULL "
 			"WHERE committer_email LIKE CONCAT('%%',%s)")
 
 		cfg.cursor.execute(set_committer_to_null, (changed_affiliation[0], ))
@@ -265,28 +265,28 @@ def fill_empty_affiliations(cfg):
 		cfg.log_activity('Debug','Resetting affiliation for %s' %
 			changed_alias[0])
 
-		set_author_to_null = ("UPDATE analysis_data SET author_affiliation = NULL "
+		set_author_to_null = ("UPDATE commits SET cmt_author_affiliation = NULL "
 			"WHERE author_raw_email LIKE CONCAT('%%',%s)")
 
 		cfg.cursor.execute(set_author_to_null,(changed_alias[0], ))
 		cfg.db.commit()
 
-		set_committer_to_null = ("UPDATE analysis_data SET committer_affiliation = NULL "
+		set_committer_to_null = ("UPDATE commits SET cmt_committer_affiliation = NULL "
 			"WHERE committer_raw_email LIKE CONCAT('%%',%s)")
 
 		cfg.cursor.execute(set_committer_to_null, (changed_alias[0], ))
 		cfg.db.commit()
 
-		reset_author = ("UPDATE analysis_data "
-			"SET author_email = %s "
-			"WHERE author_raw_email = %s")
+		reset_author = ("UPDATE commits "
+			"SET cmt_author_email = %s "
+			"WHERE cmt_author_raw_email = %s")
 
 		cfg.cursor.execute(reset_author, (discover_alias(changed_alias[0]),changed_alias[0]))
 		cfg.db.commit
 
-		reset_committer = ("UPDATE analysis_data "
-			"SET committer_email = %s "
-			"WHERE committer_raw_email = %s")
+		reset_committer = ("UPDATE commits "
+			"SET cmt_committer_email = %s "
+			"WHERE cmt_committer_raw_email = %s")
 
 		cfg.cursor.execute(reset_committer,	(discover_alias(changed_alias[0]),changed_alias[0]))
 		cfg.db.commit
@@ -310,19 +310,19 @@ def fill_empty_affiliations(cfg):
 
 	# Figure out which projects have NULL affiliations so they can be recached
 
-	set_recache = ("""UPDATE projects 
+	set_recache = ("""UPDATE repo_groups 
 				SET recache=TRUE  
-				FROM projects x, repos y, analysis_data z 
-				where x.id = y.projects_id 
+				FROM projects x, repos y, commits z 
+				where x.id = y.repo_group_id 
 				and
-				y."id" = z.repos_id
+				y."id" = z.repo_id
 				and 
         (z.author_affiliation IS NULL OR 
         z.committer_affiliation IS NULL)""")
 
-	# ("UPDATE projects p "
-	# 	"JOIN repos r ON p.id = r.projects_id "
-	# 	"JOIN analysis_data a ON r.id = a.repos_id "
+	# ("UPDATE repo_groups p "
+	# 	"JOIN repos r ON p.id = r.repo_group_id "
+	# 	"JOIN commits a ON r.id = a.repo_id "
 	# 	"SET recache=TRUE WHERE "
 	# 	"author_affiliation IS NULL OR "
 	# 	"committer_affiliation IS NULL")
@@ -331,11 +331,11 @@ def fill_empty_affiliations(cfg):
 
 	# Find any authors with NULL affiliations and fill them
 
-	find_null_authors = ("SELECT DISTINCT author_email AS email, "
-		"MIN(author_date) AS earliest "
-		"FROM analysis_data "
-		"WHERE author_affiliation IS NULL "
-		"GROUP BY author_email")
+	find_null_authors = ("SELECT DISTINCT cmt_author_email AS email, "
+		"MIN(cmt_author_date) AS earliest "
+		"FROM commits "
+		"WHERE cmt_author_affiliation IS NULL "
+		"GROUP BY cmt_author_email")
 
 	cfg.cursor.execute(find_null_authors)
 
@@ -356,11 +356,11 @@ def fill_empty_affiliations(cfg):
 
 	# Find any committers with NULL affiliations and fill them
 
-	find_null_committers = ("SELECT DISTINCT committer_email AS email, "
-		"MIN(committer_date) AS earliest "
-		"FROM analysis_data "
-		"WHERE committer_affiliation IS NULL "
-		"GROUP BY committer_email")
+	find_null_committers = ("SELECT DISTINCT cmt_committer_email AS email, "
+		"MIN(cmt_committer_date) AS earliest "
+		"FROM commits "
+		"WHERE cmt_committer_affiliation IS NULL "
+		"GROUP BY cmt_committer_email")
 
 	cfg.cursor.execute(find_null_committers)
 
@@ -379,16 +379,16 @@ def fill_empty_affiliations(cfg):
 
 	# Now that we've matched as much as possible, fill the rest as (Unknown)
 
-	fill_unknown_author = ("UPDATE analysis_data "
-		"SET author_affiliation = '(Unknown)' "
-		"WHERE author_affiliation IS NULL")
+	fill_unknown_author = ("UPDATE commits "
+		"SET cmt_author_affiliation = '(Unknown)' "
+		"WHERE cmt_author_affiliation IS NULL")
 
 	cfg.cursor.execute(fill_unknown_author)
 	cfg.db.commit()
 
-	fill_unknown_committer = ("UPDATE analysis_data "
-		"SET committer_affiliation = '(Unknown)' "
-		"WHERE committer_affiliation IS NULL")
+	fill_unknown_committer = ("UPDATE commits "
+		"SET cmt_committer_affiliation = '(Unknown)' "
+		"WHERE cmt_committer_affiliation IS NULL")
 
 	cfg.cursor.execute(fill_unknown_committer)
 	cfg.db.commit()
@@ -404,7 +404,7 @@ def invalidate_caches(cfg):
 	cfg.update_status('Invalidating caches')
 	cfg.log_activity('Info','Invalidating caches')
 
-	invalidate_cache = "UPDATE projects SET recache = TRUE"
+	invalidate_cache = "UPDATE repo_groups SET recache = TRUE"
 	cfg.cursor.execute(invalidate_cache)
 	cfg.db.commit()
 
@@ -425,103 +425,103 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 
 	# Clear stale caches
 
-	clear_project_weekly_cache = ("""
+	clear_dm_repo_group_weekly = ("""
 			DELETE 
 				FROM
-					project_weekly_cache C USING projects P 
+					dm_repo_group_weekly C USING projects P 
 				WHERE
-					P.ID = C.projects_id 
+					P.ID = C.repo_group_id 
 					AND P.recache = TRUE
 		""")
 
-	# ("DELETE c.* FROM project_weekly_cache c "
-	# 	"JOIN projects p ON c.projects_id = p.id WHERE "
+	# ("DELETE c.* FROM dm_repo_group_weekly c "
+	# 	"JOIN projects p ON c.repo_group_id = p.id WHERE "
 	# 	"p.recache=TRUE")
-	cfg.cursor.execute(clear_project_weekly_cache)
+	cfg.cursor.execute(clear_dm_repo_group_weekly)
 	cfg.db.commit()
 
-	clear_project_monthly_cache = ("""
+	clear_dm_repo_group_monthly = ("""
 			DELETE 
 				FROM
-					project_monthly_cache C USING projects P 
+					dm_repo_group_monthly C USING projects P 
 				WHERE
-					P.ID = C.projects_id 
+					P.ID = C.repo_group_id 
 					AND P.recache = TRUE
 		""")
 
-	# ("DELETE c.* FROM project_monthly_cache c "
-	# 	"JOIN projects p ON c.projects_id = p.id WHERE "
+	# ("DELETE c.* FROM dm_repo_group_monthly c "
+	# 	"JOIN projects p ON c.repo_group_id = p.id WHERE "
 	# 	"p.recache=TRUE")
-	cfg.cursor.execute(clear_project_monthly_cache)
+	cfg.cursor.execute(clear_dm_repo_group_monthly)
 	cfg.db.commit()
 
-	clear_project_annual_cache = ("""
+	clear_dm_repo_group_annual = ("""
 			DELETE 
 				FROM
-					project_annual_cache C USING projects P 
+					dm_repo_group_annual C USING projects P 
 				WHERE
-					P.ID = C.projects_id 
+					P.ID = C.repo_group_id 
 					AND P.recache = TRUE
 		""")
 
-	# ("DELETE c.* FROM project_annual_cache c "
-	# 	"JOIN projects p ON c.projects_id = p.id WHERE "
+	# ("DELETE c.* FROM dm_repo_group_annual c "
+	# 	"JOIN projects p ON c.repo_group_id = p.id WHERE "
 	# 	"p.recache=TRUE")
-	cfg.cursor.execute(clear_project_annual_cache)
+	cfg.cursor.execute(clear_dm_repo_group_annual)
 	cfg.db.commit()
 
-	clear_repo_weekly_cache = ("""
+	clear_dm_repo_weekly = ("""
 			DELETE 
 				FROM
-					repo_weekly_cache C USING repos r,
+					dm_repo_weekly C USING repos r,
 					projects P 
 				WHERE
-					C.repos_id = r.ID 
-					AND P.ID = r.projects_id 
+					C.repo_id = r.ID 
+					AND P.ID = r.repo_group_id 
 					AND P.recache = TRUE
 		""")
 
-	# ("DELETE c.* FROM repo_weekly_cache c "
-	# 	"JOIN repos r ON c.repos_id = r.id "
-	# 	"JOIN projects p ON r.projects_id = p.id WHERE "
+	# ("DELETE c.* FROM dm_repo_weekly c "
+	# 	"JOIN repos r ON c.repo_id = r.id "
+	# 	"JOIN projects p ON r.repo_group_id = p.id WHERE "
 	# 	"p.recache=TRUE")
-	cfg.cursor.execute(clear_repo_weekly_cache)
+	cfg.cursor.execute(clear_dm_repo_weekly)
 	cfg.db.commit()
 
-	clear_repo_monthly_cache = ("""
+	clear_dm_repo_monthly = ("""
 			DELETE 
 				FROM
-					repo_monthly_cache C USING repos r,
+					dm_repo_monthly C USING repos r,
 					projects P 
 				WHERE
-					C.repos_id = r.ID 
-					AND P.ID = r.projects_id 
+					C.repo_id = r.ID 
+					AND P.ID = r.repo_group_id 
 					AND P.recache = TRUE
 		""")
 
-	# ("DELETE c.* FROM repo_monthly_cache c "
-	# 	"JOIN repos r ON c.repos_id = r.id "
-	# 	"JOIN projects p ON r.projects_id = p.id WHERE "
+	# ("DELETE c.* FROM dm_repo_monthly c "
+	# 	"JOIN repos r ON c.repo_id = r.id "
+	# 	"JOIN projects p ON r.repo_group_id = p.id WHERE "
 	# 	"p.recache=TRUE")
-	cfg.cursor.execute(clear_repo_monthly_cache)
+	cfg.cursor.execute(clear_dm_repo_monthly)
 	cfg.db.commit()
 
-	clear_repo_annual_cache = ("""
+	clear_dm_repo_annual = ("""
 			DELETE 
 				FROM
-					repo_annual_cache C USING repos r,
+					dm_repo_annual C USING repos r,
 					projects P 
 				WHERE
-					C.repos_id = r.ID 
-					AND P.ID = r.projects_id 
+					C.repo_id = r.ID 
+					AND P.ID = r.repo_group_id 
 					AND P.recache = TRUE
 		""")
 
-	# ("DELETE c.* FROM repo_annual_cache c "
-	# 	"JOIN repos r ON c.repos_id = r.id "
-	# 	"JOIN projects p ON r.projects_id = p.id WHERE "
+	# ("DELETE c.* FROM dm_repo_annual c "
+	# 	"JOIN repos r ON c.repo_id = r.id "
+	# 	"JOIN projects p ON r.repo_group_id = p.id WHERE "
 	# 	"p.recache=TRUE")
-	cfg.cursor.execute(clear_repo_annual_cache)
+	cfg.cursor.execute(clear_dm_repo_annual)
 	cfg.db.commit()
 
 	clear_unknown_cache = ("""
@@ -529,12 +529,12 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 				FROM
 					unknown_cache C USING projects P 
 				WHERE
-					P.ID = C.projects_id 
+					P.ID = C.repo_group_id 
 					AND P.recache = TRUE
 		""")
 
 	# ("DELETE c.* FROM unknown_cache c "
-	# 	"JOIN projects p ON c.projects_id = p.id WHERE "
+	# 	"JOIN projects p ON c.repo_group_id = p.id WHERE "
 	# 	"p.recache=TRUE")
 	cfg.cursor.execute(clear_unknown_cache)
 	cfg.db.commit()
@@ -545,16 +545,16 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 
 	unknown_authors = ("INSERT INTO unknown_cache "
 		"SELECT 'author', "
-		"r.projects_id, "
+		"r.repo_group_id, "
 		"a.author_email, "
 		"SPLIT_PART(a.author_email,'@',2), "
 		"SUM(a.added) "
-		"FROM analysis_data a "
-		"JOIN repos r ON r.id = a.repos_id "
-		"JOIN projects p ON p.id = r.projects_id "
+		"FROM commits a "
+		"JOIN repos r ON r.id = a.repo_id "
+		"JOIN projects p ON p.id = r.repo_group_id "
 		"WHERE a.author_affiliation = '(Unknown)' "
 		"AND p.recache = TRUE "
-		"GROUP BY r.projects_id,a.author_email")
+		"GROUP BY r.repo_group_id,a.author_email")
 
 	cfg.cursor.execute(unknown_authors)
 	cfg.db.commit()
@@ -563,16 +563,16 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 
 	unknown_committers = ("INSERT INTO unknown_cache "
 		"SELECT 'committer', "
-		"r.projects_id, "
+		"r.repo_group_id, "
 		"a.committer_email, "
 		"SPLIT_PART(a.committer_email,'@',2), "
 		"SUM(a.added) "
-		"FROM analysis_data a "
-		"JOIN repos r ON r.id = a.repos_id "
-		"JOIN projects p ON p.id = r.projects_id "
+		"FROM commits a "
+		"JOIN repos r ON r.id = a.repo_id "
+		"JOIN projects p ON p.id = r.repo_group_id "
 		"WHERE a.committer_affiliation = '(Unknown)' "
 		"AND p.recache = TRUE "
-		"GROUP BY r.projects_id,a.committer_email")
+		"GROUP BY r.repo_group_id,a.committer_email")
 
 	cfg.cursor.execute(unknown_committers)
 	cfg.db.commit()
@@ -581,8 +581,8 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 
 	cfg.log_activity('Verbose','Caching projects')
 
-	cache_projects_by_week = ("INSERT INTO project_weekly_cache "
-		"SELECT r.projects_id AS projects_id, "
+	cache_projects_by_week = ("INSERT INTO dm_repo_group_weekly "
+		"SELECT r.repo_group_id AS repo_group_id, "
 		"a.%s_email AS email, "
 		"a.%s_affiliation AS affiliation, "
 		"date_part('week', TO_TIMESTAMP(a.%s_date, 'YYYY-MM-DD')) AS week, "
@@ -592,16 +592,16 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		"SUM(a.whitespace) AS whitespace, "
 		"COUNT(DISTINCT a.filename) AS files, "
 		"COUNT(DISTINCT a.commit) AS patches "
-		"FROM analysis_data a "
-		"JOIN repos r ON r.id = a.repos_id "
-		"JOIN projects p ON p.id = r.projects_id "
+		"FROM commits a "
+		"JOIN repos r ON r.id = a.repo_id "
+		"JOIN projects p ON p.id = r.repo_group_id "
 		"LEFT JOIN exclude e ON "
 			"(a.author_email = e.email "
-				"AND (e.projects_id = r.projects_id "
-					"OR e.projects_id = 0)) "
+				"AND (e.repo_group_id = r.repo_group_id "
+					"OR e.repo_group_id = 0)) "
 			"OR (a.author_email LIKE CONCAT('%%',e.domain) "
-				"AND (e.projects_id = r.projects_id "
-				"OR e.projects_id = 0)) "
+				"AND (e.repo_group_id = r.repo_group_id "
+				"OR e.repo_group_id = 0)) "
 		"WHERE e.email IS NULL "
 		"AND e.domain IS NULL "
 		"AND p.recache = TRUE "
@@ -609,15 +609,15 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		"year, "
 		"affiliation, "
 		"a.%s_email,"
-		"r.projects_id"
+		"r.repo_group_id"
 		% (report_attribution,report_attribution,
 		report_date,report_date,report_attribution))
 
 	cfg.cursor.execute(cache_projects_by_week)
 	cfg.db.commit()
 
-	cache_projects_by_month = ("INSERT INTO project_monthly_cache "
-		"SELECT r.projects_id AS projects_id, "
+	cache_projects_by_month = ("INSERT INTO dm_repo_group_monthly "
+		"SELECT r.repo_group_id AS repo_group_id, "
 		"a.%s_email AS email, "
 		"a.%s_affiliation AS affiliation, "
 		"date_part('month', TO_TIMESTAMP(a.%s_date, 'YYYY-MM-DD')) AS month, "
@@ -627,16 +627,16 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		"SUM(a.whitespace) AS whitespace, "
 		"COUNT(DISTINCT a.filename) AS files, "
 		"COUNT(DISTINCT a.commit) AS patches "
-		"FROM analysis_data a "
-		"JOIN repos r ON r.id = a.repos_id "
-		"JOIN projects p ON p.id = r.projects_id "
+		"FROM commits a "
+		"JOIN repos r ON r.id = a.repo_id "
+		"JOIN projects p ON p.id = r.repo_group_id "
 		"LEFT JOIN exclude e ON "
 			"(a.author_email = e.email "
-				"AND (e.projects_id = r.projects_id "
-					"OR e.projects_id = 0)) "
+				"AND (e.repo_group_id = r.repo_group_id "
+					"OR e.repo_group_id = 0)) "
 			"OR (a.author_email LIKE CONCAT('%%',e.domain) "
-				"AND (e.projects_id = r.projects_id "
-				"OR e.projects_id = 0)) "
+				"AND (e.repo_group_id = r.repo_group_id "
+				"OR e.repo_group_id = 0)) "
 		"WHERE e.email IS NULL "
 		"AND e.domain IS NULL "
 		"AND p.recache = TRUE "
@@ -644,15 +644,15 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		"year, "
 		"affiliation, "
 		"a.%s_email,"
-		"r.projects_id"
+		"r.repo_group_id"
 		% (report_attribution,report_attribution,
 		report_date,report_date,report_attribution))
 
 	cfg.cursor.execute(cache_projects_by_month)
 	cfg.db.commit()
 
-	cache_projects_by_year = ("INSERT INTO project_annual_cache "
-		"SELECT r.projects_id AS projects_id, "
+	cache_projects_by_year = ("INSERT INTO dm_repo_group_annual "
+		"SELECT r.repo_group_id AS repo_group_id, "
 		"a.%s_email AS email, "
 		"a.%s_affiliation AS affiliation, "
 		"date_part('year', TO_TIMESTAMP(a.%s_date, 'YYYY-MM-DD')) AS year, "
@@ -661,23 +661,23 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		"SUM(a.whitespace) AS whitespace, "
 		"COUNT(DISTINCT a.filename) AS files, "
 		"COUNT(DISTINCT a.commit) AS patches "
-		"FROM analysis_data a "
-		"JOIN repos r ON r.id = a.repos_id "
-		"JOIN projects p ON p.id = r.projects_id "
+		"FROM commits a "
+		"JOIN repos r ON r.id = a.repo_id "
+		"JOIN projects p ON p.id = r.repo_group_id "
 		"LEFT JOIN exclude e ON "
 			"(a.author_email = e.email "
-				"AND (e.projects_id = r.projects_id "
-					"OR e.projects_id = 0)) "
+				"AND (e.repo_group_id = r.repo_group_id "
+					"OR e.repo_group_id = 0)) "
 			"OR (a.author_email LIKE CONCAT('%%',e.domain) "
-				"AND (e.projects_id = r.projects_id "
-				"OR e.projects_id = 0)) "
+				"AND (e.repo_group_id = r.repo_group_id "
+				"OR e.repo_group_id = 0)) "
 		"WHERE e.email IS NULL "
 		"AND e.domain IS NULL "
 		"AND p.recache = TRUE "
 		"GROUP BY year, "
 		"affiliation, "
 		"a.%s_email,"
-		"r.projects_id"
+		"r.repo_group_id"
 		% (report_attribution,report_attribution,
 		report_date,report_attribution))
 
@@ -688,8 +688,8 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 
 	cfg.log_activity('Verbose','Caching repos')
 
-	cache_repos_by_week = ("INSERT INTO repo_weekly_cache "
-		"SELECT a.repos_id AS repos_id, "
+	cache_repos_by_week = ("INSERT INTO dm_repo_weekly "
+		"SELECT a.repo_id AS repo_id, "
 		"a.%s_email AS email, "
 		"a.%s_affiliation AS affiliation, "
 		"date_part('week', TO_TIMESTAMP(a.%s_date, 'YYYY-MM-DD')) AS week, "
@@ -699,16 +699,16 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		"SUM(a.whitespace) AS whitespace, "
 		"COUNT(DISTINCT a.filename) AS files, "
 		"COUNT(DISTINCT a.commit) AS patches "
-		"FROM analysis_data a "
-		"JOIN repos r ON r.id = a.repos_id "
-		"JOIN projects p ON p.id = r.projects_id "
+		"FROM commits a "
+		"JOIN repos r ON r.id = a.repo_id "
+		"JOIN projects p ON p.id = r.repo_group_id "
 		"LEFT JOIN exclude e ON "
 			"(a.author_email = e.email "
-				"AND (e.projects_id = r.projects_id "
-					"OR e.projects_id = 0)) "
+				"AND (e.repo_group_id = r.repo_group_id "
+					"OR e.repo_group_id = 0)) "
 			"OR (a.author_email LIKE CONCAT('%%',e.domain) "
-				"AND (e.projects_id = r.projects_id "
-				"OR e.projects_id = 0)) "
+				"AND (e.repo_group_id = r.repo_group_id "
+				"OR e.repo_group_id = 0)) "
 		"WHERE e.email IS NULL "
 		"AND e.domain IS NULL "
 		"AND p.recache = TRUE "
@@ -716,15 +716,15 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		"year, "
 		"affiliation, "
 		"a.%s_email,"
-		"a.repos_id"
+		"a.repo_id"
 		% (report_attribution,report_attribution,
 		report_date,report_date,report_attribution))
 
 	cfg.cursor.execute(cache_repos_by_week)
 	cfg.db.commit()
 
-	cache_repos_by_month = ("INSERT INTO repo_monthly_cache "
-		"SELECT a.repos_id AS repos_id, "
+	cache_repos_by_month = ("INSERT INTO dm_repo_monthly "
+		"SELECT a.repo_id AS repo_id, "
 		"a.%s_email AS email, "
 		"a.%s_affiliation AS affiliation, "
 		"date_part('month', TO_TIMESTAMP(a.%s_date, 'YYYY-MM-DD')) AS month, "
@@ -734,16 +734,16 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		"SUM(a.whitespace) AS whitespace, "
 		"COUNT(DISTINCT a.filename) AS files, "
 		"COUNT(DISTINCT a.commit) AS patches "
-		"FROM analysis_data a "
-		"JOIN repos r ON r.id = a.repos_id "
-		"JOIN projects p ON p.id = r.projects_id "
+		"FROM commits a "
+		"JOIN repos r ON r.id = a.repo_id "
+		"JOIN projects p ON p.id = r.repo_group_id "
 		"LEFT JOIN exclude e ON "
 			"(a.author_email = e.email "
-				"AND (e.projects_id = r.projects_id "
-					"OR e.projects_id = 0)) "
+				"AND (e.repo_group_id = r.repo_group_id "
+					"OR e.repo_group_id = 0)) "
 			"OR (a.author_email LIKE CONCAT('%%',e.domain) "
-				"AND (e.projects_id = r.projects_id "
-				"OR e.projects_id = 0)) "
+				"AND (e.repo_group_id = r.repo_group_id "
+				"OR e.repo_group_id = 0)) "
 		"WHERE e.email IS NULL "
 		"AND e.domain IS NULL "
 		"AND p.recache = TRUE "
@@ -751,15 +751,15 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		"year, "
 		"affiliation, "
 		"a.%s_email,"
-		"a.repos_id"
+		"a.repo_id"
 		% (report_attribution,report_attribution,
 		report_date,report_date,report_attribution))
 
 	cfg.cursor.execute(cache_repos_by_month)
 	cfg.db.commit()
 
-	cache_repos_by_year = ("INSERT INTO repo_annual_cache "
-		"SELECT a.repos_id AS repos_id, "
+	cache_repos_by_year = ("INSERT INTO dm_repo_annual "
+		"SELECT a.repo_id AS repo_id, "
 		"a.%s_email AS email, "
 		"a.%s_affiliation AS affiliation, "
 		"date_part('year', TO_TIMESTAMP(a.%s_date, 'YYYY-MM-DD')) AS year, "
@@ -768,23 +768,23 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		"SUM(a.whitespace) AS whitespace, "
 		"COUNT(DISTINCT a.filename) AS files, "
 		"COUNT(DISTINCT a.commit) AS patches "
-		"FROM analysis_data a "
-		"JOIN repos r ON r.id = a.repos_id "
-		"JOIN projects p ON p.id = r.projects_id "
+		"FROM commits a "
+		"JOIN repos r ON r.id = a.repo_id "
+		"JOIN projects p ON p.id = r.repo_group_id "
 		"LEFT JOIN exclude e ON "
 			"(a.author_email = e.email "
-				"AND (e.projects_id = r.projects_id "
-					"OR e.projects_id = 0)) "
+				"AND (e.repo_group_id = r.repo_group_id "
+					"OR e.repo_group_id = 0)) "
 			"OR (a.author_email LIKE CONCAT('%%',e.domain) "
-				"AND (e.projects_id = r.projects_id "
-				"OR e.projects_id = 0)) "
+				"AND (e.repo_group_id = r.repo_group_id "
+				"OR e.repo_group_id = 0)) "
 		"WHERE e.email IS NULL "
 		"AND e.domain IS NULL "
 		"AND p.recache = TRUE "
 		"GROUP BY year, "
 		"affiliation, "
 		"a.%s_email,"
-		"a.repos_id"
+		"a.repo_id"
 		% (report_attribution,report_attribution,
 		report_date,report_attribution))
 
@@ -793,7 +793,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 
 	# Reset cache flags
 
-	reset_recache = "UPDATE projects SET recache = FALSE"
+	reset_recache = "UPDATE repo_groups SET recache = FALSE"
 	cfg.cursor.execute(reset_recache)
 	cfg.db.commit()
 
