@@ -529,7 +529,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 				FROM
 					unknown_cache C USING repo_groups P 
 				WHERE
-					P.repo_group_id = C.projects_id 
+					P.repo_group_id = C.repo_group_id 
 					AND P.rg_recache = 1
 		""")
 
