@@ -110,18 +110,48 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 		store = ("INSERT INTO commits (repo_id,cmt_commit_hash,cmt_filename,"
 			"cmt_author_name,cmt_author_raw_email,cmt_author_email,cmt_author_date,"
 			"cmt_committer_name,cmt_committer_raw_email,cmt_committer_email,cmt_committer_date,"
-			"cmt_added,cmt_removed,cmt_whitespace) "
-			"VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)")
+			"cmt_added,cmt_removed,cmt_whitespace, tool_source, tool_version, data_source, data_collection_date) "
+			"VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s, %s, %s, %s, %s)")
 
 		cursor_local.execute(store, (
 			repos_id,commit,filename,
 			author_name,author_email,discover_alias(author_email),author_date,
 			committer_name,committer_email,discover_alias(committer_email),committer_date,
-			added,removed,whitespace))
+			added,removed,whitespace, cfg.tool_source, cfg.tool_version, cfg.data_source, datetime.datetime.now()))
 
 		db_local.commit()
 
 		cfg.log_activity('Debug','Stored commit: %s' % commit)
+
+		# store = ("INSERT INTO contributors (repo_id,cmt_commit_hash,cmt_filename,"
+		# 	"cmt_author_name,cmt_author_raw_email,cmt_author_email,cmt_author_date,"
+		# 	"cmt_committer_name,cmt_committer_raw_email,cmt_committer_email,cmt_committer_date,"
+		# 	"cmt_added,cmt_removed,cmt_whitespace) "
+		# 	"VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)")
+
+
+		# cursor_local.execute(store, (
+		# 	None, #cntrb_login
+		# 	author_email, #login
+		# 	#email
+		# 	#comany
+		# 	,#created_at
+		# 	,#type
+		# 	,#fake
+		# 	,#deleted
+		# 	,#long
+		# 	,#lat
+		# 	,#countrycode
+		# 	,#state
+		# 	,#city
+
+		# 	author_name,discover_alias(author_email),author_date,
+		# 	committer_name,committer_email,discover_alias(committer_email),committer_date,
+		# 	added,removed,whitespace))
+
+		# db_local.commit()
+
+		
 
 ### The real function starts here ###
 
