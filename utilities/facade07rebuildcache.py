@@ -556,7 +556,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		AND p.rg_recache = 1 
 		GROUP BY r.repo_group_id,a.cmt_author_email),%s,%s,%s,%s)""")
 
-	cfg.cursor.execute(unknown_authors, cfg.tool_source, cfg.tool_version, cfg.data_source, datetime.datetime.now())
+	cfg.cursor.execute(unknown_authors, (cfg.tool_source, cfg.tool_version, cfg.data_source, datetime.datetime.now()))
 	cfg.db.commit()
 
 	# Cache the unknown committers
@@ -574,7 +574,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		AND p.rg_recache = 1 
 		GROUP BY r.repo_group_id,a.cmt_committer_email),%s,%s,%s,%s)""")
 
-	cfg.cursor.execute(unknown_committers,cfg.tool_source, cfg.tool_version, cfg.data_source, datetime.datetime.now())
+	cfg.cursor.execute(unknown_committers, (cfg.tool_source, cfg.tool_version, cfg.data_source, datetime.datetime.now()))
 	cfg.db.commit()
 
 	# Start caching by project
@@ -681,7 +681,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		% (report_attribution,report_attribution,
 		report_date,report_attribution))
 
-	cfg.cursor.execute(cache_projects_by_year, cfg.tool_source, cfg.tool_version, cfg.data_source, datetime.datetime.now())
+	cfg.cursor.execute(cache_projects_by_year, (cfg.tool_source, cfg.tool_version, cfg.data_source, datetime.datetime.now()))
 	cfg.db.commit()
 
 	# Start caching by repo
@@ -720,7 +720,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		% (report_attribution,report_attribution,
 		report_date,report_date,report_attribution))
 
-	cfg.cursor.execute(cache_repos_by_week, cfg.tool_source, cfg.tool_version, cfg.data_source, datetime.datetime.now())
+	cfg.cursor.execute(cache_repos_by_week, (cfg.tool_source, cfg.tool_version, cfg.data_source, datetime.datetime.now()))
 	cfg.db.commit()
 
 	cache_repos_by_month = ("""INSERT INTO dm_repo_monthly VALUES
@@ -755,7 +755,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		% (report_attribution,report_attribution,
 		report_date,report_date,report_attribution))
 
-	cfg.cursor.execute(cache_repos_by_month,cfg.tool_source, cfg.tool_version, cfg.data_source, datetime.datetime.now())
+	cfg.cursor.execute(cache_repos_by_month,(cfg.tool_source, cfg.tool_version, cfg.data_source, datetime.datetime.now()))
 	cfg.db.commit()
 
 	cache_repos_by_year = ("""INSERT INTO dm_repo_annual VALUES
@@ -788,7 +788,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		% (report_attribution,report_attribution,
 		report_date,report_attribution))
 
-	cfg.cursor.execute(cache_repos_by_year, cfg.tool_source, cfg.tool_version, cfg.data_source, datetime.datetime.now())
+	cfg.cursor.execute(cache_repos_by_year, (cfg.tool_source, cfg.tool_version, cfg.data_source, datetime.datetime.now()))
 	cfg.db.commit()
 
 	# Reset cache flags
