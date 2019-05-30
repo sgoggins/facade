@@ -620,9 +620,11 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		a.cmt_%s_email,
 		r.repo_group_id"""
 		% (report_attribution,report_attribution,
-		report_date,report_date,report_attribution))
+		report_date,report_date,
+		cfg.tool_source, cfg.tool_version, cfg.data_source, datetime.datetime.now()
+		report_attribution))
 
-	cfg.cursor.execute(cache_projects_by_week, (cfg.tool_source, cfg.tool_version, cfg.data_source, datetime.datetime.now()))
+	cfg.cursor.execute(cache_projects_by_week)
 	cfg.db.commit()
 
 	cache_projects_by_month = ("""INSERT INTO dm_repo_group_monthly 
