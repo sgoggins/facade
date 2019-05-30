@@ -21,7 +21,8 @@
 
 import sys
 import os.path
-import MySQLdb
+#import MySQLdb
+import pymysql
 import getpass
 import imp
 import bcrypt

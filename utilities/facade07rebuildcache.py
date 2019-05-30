@@ -557,7 +557,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		JOIN repo_groups p ON p.repo_group_id = r.repo_group_id 
 		WHERE a.cmt_author_affiliation = '(Unknown)' 
 		AND p.rg_recache = 1 
-		GROUP BY r.repo_group_id,a.cmt_author_email
+		GROUP BY r.repo_group_id,a.cmt_author_email, info.a, info.b, info.c, info.d
 
 		""")
 
@@ -579,7 +579,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		JOIN repo_groups p ON p.repo_group_id = r.repo_group_id 
 		WHERE a.cmt_committer_affiliation = '(Unknown)' 
 		AND p.rg_recache = 1 
-		GROUP BY r.repo_group_id,a.cmt_committer_email""")
+		GROUP BY r.repo_group_id,a.cmt_committer_email, info.a, info.b, info.c, info.d """)
 
 	cfg.cursor.execute(unknown_committers, (cfg.tool_source, cfg.tool_version, cfg.data_source, datetime.datetime.now()))
 	cfg.db.commit()
@@ -618,7 +618,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		year, 
 		affiliation, 
 		a.cmt_%s_email,
-		r.repo_group_id"""
+		r.repo_group_id, info.a, info.b, info.c, info.d"""
 		% (report_attribution,report_attribution,
 		report_date,report_date,report_attribution))
 
@@ -655,7 +655,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		year, 
 		affiliation, 
 		a.cmt_%s_email,
-		r.repo_group_id"""
+		r.repo_group_id, info.a, info.b, info.c, info.d"""
 		% (report_attribution,report_attribution,
 		report_date,report_date,report_attribution))
 
@@ -690,7 +690,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		GROUP BY year, 
 		affiliation, 
 		a.cmt_%s_email,
-		r.repo_group_id"""
+		r.repo_group_id, info.a, info.b, info.c, info.d"""
 		% (report_attribution,report_attribution,
 		report_date,report_attribution))
 
@@ -731,7 +731,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		year, 
 		affiliation, 
 		a.cmt_%s_email,
-		a.repo_id"""
+		a.repo_id, info.a, info.b, info.c, info.d"""
 		% (report_attribution,report_attribution,
 		report_date,report_date,report_attribution))
 
@@ -768,7 +768,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		year, 
 		affiliation, 
 		a.cmt_%s_email,
-		a.repo_id"""
+		a.repo_id, info.a, info.b, info.c, info.d"""
 		% (report_attribution,report_attribution,
 		report_date,report_date,report_attribution))
 
@@ -803,7 +803,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		GROUP BY year, 
 		affiliation, 
 		a.cmt_%s_email,
-		a.repo_id"""
+		a.repo_id, info.a, info.b, info.c, info.d"""
 		% (report_attribution,report_attribution,
 		report_date,report_attribution))
 
