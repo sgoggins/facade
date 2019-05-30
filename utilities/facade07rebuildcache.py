@@ -543,36 +543,43 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 
 	# Cache the unknown authors
 
-	unknown_authors = ("""INSERT INTO unknown_cache VALUES
-		((SELECT 'author', 
+	unknown_authors = ("""
+		INSERT INTO unknown_cache 
+		SELECT 'author', 
 		r.repo_group_id, 
 		a.cmt_author_email, 
 		SPLIT_PART(a.cmt_author_email,'@',2), 
-		SUM(a.cmt_added) 
-		FROM commits a 
+		SUM(a.cmt_added),
+		info.a, info.b, info.c, info.d
+		FROM (VALUES(%s,%s,%s,%s)) info(a,b,c,d), 
+		commits a 
 		JOIN repo r ON r.repo_id = a.repo_id 
 		JOIN repo_groups p ON p.repo_group_id = r.repo_group_id 
 		WHERE a.cmt_author_affiliation = '(Unknown)' 
 		AND p.rg_recache = 1 
-		GROUP BY r.repo_group_id,a.cmt_author_email),%s,%s,%s,%s)""")
+		GROUP BY r.repo_group_id,a.cmt_author_email)
+
+		""")
 
 	cfg.cursor.execute(unknown_authors, (cfg.tool_source, cfg.tool_version, cfg.data_source, datetime.datetime.now()))
 	cfg.db.commit()
 
 	# Cache the unknown committers
 
-	unknown_committers = ("""INSERT INTO unknown_cache VALUES
-		((SELECT 'committer', 
+	unknown_committers = ("""INSERT INTO unknown_cache
+		SELECT 'committer', 
 		r.repo_group_id, 
 		a.cmt_committer_email, 
 		SPLIT_PART(a.cmt_committer_email,'@',2), 
-		SUM(a.cmt_added) 
-		FROM commits a 
+		SUM(a.cmt_added),
+		info.a, info.b, info.c, info.d
+		FROM (VALUES(%s,%s,%s,%s)) info(a,b,c,d), 
+		commits a 
 		JOIN repo r ON r.repo_id = a.repo_id 
 		JOIN repo_groups p ON p.repo_group_id = r.repo_group_id 
 		WHERE a.cmt_committer_affiliation = '(Unknown)' 
 		AND p.rg_recache = 1 
-		GROUP BY r.repo_group_id,a.cmt_committer_email),%s,%s,%s,%s)""")
+		GROUP BY r.repo_group_id,a.cmt_committer_email""")
 
 	cfg.cursor.execute(unknown_committers, (cfg.tool_source, cfg.tool_version, cfg.data_source, datetime.datetime.now()))
 	cfg.db.commit()
@@ -581,8 +588,8 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 
 	cfg.log_activity('Verbose','Caching projects')
 
-	cache_projects_by_week = ("""INSERT INTO dm_repo_group_weekly VALUES 
-		((SELECT r.repo_group_id AS repo_group_id, 
+	cache_projects_by_week = ("""INSERT INTO dm_repo_group_weekly  
+		SELECT r.repo_group_id AS repo_group_id, 
 		a.cmt_%s_email AS email, 
 		a.cmt_%s_affiliation AS affiliation, 
 		date_part('week', TO_TIMESTAMP(a.cmt_%s_date, 'YYYY-MM-DD')) AS week, 
@@ -591,8 +598,10 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		SUM(a.cmt_removed) AS removed, 
 		SUM(a.cmt_whitespace) AS whitespace, 
 		COUNT(DISTINCT a.cmt_filename) AS files, 
-		COUNT(DISTINCT a.cmt_commit_hash) AS patches 
-		FROM commits a 
+		COUNT(DISTINCT a.cmt_commit_hash) AS patches,
+		info.a, info.b, info.c, info.d
+		FROM (VALUES(%s,%s,%s,%s)) info(a,b,c,d), 
+		commits a 
 		JOIN repo r ON r.repo_id = a.repo_id 
 		JOIN repo_groups p ON p.repo_group_id = r.repo_group_id 
 		LEFT JOIN exclude e ON 
@@ -609,15 +618,15 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		year, 
 		affiliation, 
 		a.cmt_%s_email,
-		r.repo_group_id), %s,%s,%s,%s)"""
+		r.repo_group_id"""
 		% (report_attribution,report_attribution,
 		report_date,report_date,report_attribution))
 
 	cfg.cursor.execute(cache_projects_by_week, (cfg.tool_source, cfg.tool_version, cfg.data_source, datetime.datetime.now()))
 	cfg.db.commit()
 
-	cache_projects_by_month = ("""INSERT INTO dm_repo_group_monthly VALUES
-		((SELECT r.repo_group_id AS repo_group_id, 
+	cache_projects_by_month = ("""INSERT INTO dm_repo_group_monthly 
+		SELECT r.repo_group_id AS repo_group_id, 
 		a.cmt_%s_email AS email, 
 		a.cmt_%s_affiliation AS affiliation, 
 		date_part('month', TO_TIMESTAMP(a.cmt_%s_date, 'YYYY-MM-DD')) AS month, 
@@ -626,8 +635,10 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		SUM(a.cmt_removed) AS removed, 
 		SUM(a.cmt_whitespace) AS whitespace, 
 		COUNT(DISTINCT a.cmt_filename) AS files, 
-		COUNT(DISTINCT a.cmt_commit_hash) AS patches 
-		FROM commits a 
+		COUNT(DISTINCT a.cmt_commit_hash) AS patches,
+		info.a, info.b, info.c, info.d
+		FROM (VALUES(%s,%s,%s,%s)) info(a,b,c,d), 
+		commits a 
 		JOIN repo r ON r.repo_id = a.repo_id 
 		JOIN repo_groups p ON p.repo_group_id = r.repo_group_id 
 		LEFT JOIN exclude e ON 
@@ -644,15 +655,15 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		year, 
 		affiliation, 
 		a.cmt_%s_email,
-		r.repo_group_id),%s,%s,%s,%s)"""
+		r.repo_group_id"""
 		% (report_attribution,report_attribution,
 		report_date,report_date,report_attribution))
 
 	cfg.cursor.execute(cache_projects_by_month, (cfg.tool_source, cfg.tool_version, cfg.data_source, datetime.datetime.now()))
 	cfg.db.commit()
 
-	cache_projects_by_year = ("""INSERT INTO dm_repo_group_annual VALUES
-		((SELECT r.repo_group_id AS repo_group_id, 
+	cache_projects_by_year = ("""INSERT INTO dm_repo_group_annual
+		SELECT r.repo_group_id AS repo_group_id, 
 		a.cmt_%s_email AS email, 
 		a.cmt_%s_affiliation AS affiliation, 
 		date_part('year', TO_TIMESTAMP(a.cmt_%s_date, 'YYYY-MM-DD')) AS year, 
@@ -660,8 +671,10 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		SUM(a.cmt_removed) AS removed, 
 		SUM(a.cmt_whitespace) AS whitespace, 
 		COUNT(DISTINCT a.cmt_filename) AS files, 
-		COUNT(DISTINCT a.cmt_commit_hash) AS patches 
-		FROM commits a 
+		COUNT(DISTINCT a.cmt_commit_hash) AS patches,
+		info.a, info.b, info.c, info.d
+		FROM (VALUES(%s,%s,%s,%s)) info(a,b,c,d), 
+		commits a 
 		JOIN repo r ON r.repo_id = a.repo_id 
 		JOIN repo_groups p ON p.repo_group_id = r.repo_group_id 
 		LEFT JOIN exclude e ON 
@@ -677,7 +690,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		GROUP BY year, 
 		affiliation, 
 		a.cmt_%s_email,
-		r.repo_group_id), %s,%s,%s,%s)"""
+		r.repo_group_id"""
 		% (report_attribution,report_attribution,
 		report_date,report_attribution))
 
@@ -688,8 +701,8 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 
 	cfg.log_activity('Verbose','Caching repos')
 
-	cache_repos_by_week = ("""INSERT INTO dm_repo_weekly VALUES
-		((SELECT a.repo_id AS repo_id, 
+	cache_repos_by_week = ("""INSERT INTO dm_repo_weekly 
+		SELECT a.repo_id AS repo_id, 
 		a.cmt_%s_email AS email, 
 		a.cmt_%s_affiliation AS affiliation, 
 		date_part('week', TO_TIMESTAMP(a.cmt_%s_date, 'YYYY-MM-DD')) AS week, 
@@ -698,8 +711,10 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		SUM(a.cmt_removed) AS removed, 
 		SUM(a.cmt_whitespace) AS whitespace, 
 		COUNT(DISTINCT a.cmt_filename) AS files, 
-		COUNT(DISTINCT a.cmt_commit_hash) AS patches 
-		FROM commits a 
+		COUNT(DISTINCT a.cmt_commit_hash) AS patches,
+		info.a, info.b, info.c, info.d
+		FROM (VALUES(%s,%s,%s,%s)) info(a,b,c,d), 
+		commits a 
 		JOIN repo r ON r.repo_id = a.repo_id 
 		JOIN repo_groups p ON p.repo_group_id = r.repo_group_id 
 		LEFT JOIN exclude e ON 
@@ -716,15 +731,15 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		year, 
 		affiliation, 
 		a.cmt_%s_email,
-		a.repo_id),%s,%s,%s,%s)"""
+		a.repo_id"""
 		% (report_attribution,report_attribution,
 		report_date,report_date,report_attribution))
 
 	cfg.cursor.execute(cache_repos_by_week, (cfg.tool_source, cfg.tool_version, cfg.data_source, datetime.datetime.now()))
 	cfg.db.commit()
 
-	cache_repos_by_month = ("""INSERT INTO dm_repo_monthly VALUES
-		((SELECT a.repo_id AS repo_id, 
+	cache_repos_by_month = ("""INSERT INTO dm_repo_monthly
+		SELECT a.repo_id AS repo_id, 
 		a.cmt_%s_email AS email, 
 		a.cmt_%s_affiliation AS affiliation, 
 		date_part('month', TO_TIMESTAMP(a.cmt_%s_date, 'YYYY-MM-DD')) AS month, 
@@ -733,8 +748,10 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		SUM(a.cmt_removed) AS removed, 
 		SUM(a.cmt_whitespace) AS whitespace, 
 		COUNT(DISTINCT a.cmt_filename) AS files, 
-		COUNT(DISTINCT a.cmt_commit_hash) AS patches 
-		FROM commits a 
+		COUNT(DISTINCT a.cmt_commit_hash) AS patches, 
+		info.a, info.b, info.c, info.d
+		FROM (VALUES(%s,%s,%s,%s)) info(a,b,c,d), 
+		commits a 
 		JOIN repo r ON r.repo_id = a.repo_id 
 		JOIN repo_groups p ON p.repo_group_id = r.repo_group_id 
 		LEFT JOIN exclude e ON 
@@ -751,15 +768,15 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		year, 
 		affiliation, 
 		a.cmt_%s_email,
-		a.repo_id),%s,%s,%s,%s)"""
+		a.repo_id"""
 		% (report_attribution,report_attribution,
 		report_date,report_date,report_attribution))
 
 	cfg.cursor.execute(cache_repos_by_month,(cfg.tool_source, cfg.tool_version, cfg.data_source, datetime.datetime.now()))
 	cfg.db.commit()
 
-	cache_repos_by_year = ("""INSERT INTO dm_repo_annual VALUES
-		((SELECT a.repo_id AS repo_id, 
+	cache_repos_by_year = ("""INSERT INTO dm_repo_annual 
+		SELECT a.repo_id AS repo_id, 
 		a.cmt_%s_email AS email, 
 		a.cmt_%s_affiliation AS affiliation, 
 		date_part('year', TO_TIMESTAMP(a.cmt_%s_date, 'YYYY-MM-DD')) AS year, 
@@ -767,8 +784,10 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		SUM(a.cmt_removed) AS removed, 
 		SUM(a.cmt_whitespace) AS whitespace, 
 		COUNT(DISTINCT a.cmt_filename) AS files, 
-		COUNT(DISTINCT a.cmt_commit_hash) AS patches 
-		FROM commits a 
+		COUNT(DISTINCT a.cmt_commit_hash) AS patches, 
+		info.a, info.b, info.c, info.d
+		FROM (VALUES(%s,%s,%s,%s)) info(a,b,c,d), 
+		commits a 
 		JOIN repo r ON r.repo_id = a.repo_id 
 		JOIN repo_groups p ON p.repo_group_id = r.repo_group_id 
 		LEFT JOIN exclude e ON 
@@ -784,7 +803,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		GROUP BY year, 
 		affiliation, 
 		a.cmt_%s_email,
-		a.repo_id), %s,%s,%s,%s)"""
+		a.repo_id"""
 		% (report_attribution,report_attribution,
 		report_date,report_attribution))
 
