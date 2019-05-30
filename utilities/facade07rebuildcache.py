@@ -622,7 +622,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		% (report_attribution,report_attribution,
 		report_date,report_date,
 		cfg.tool_source, cfg.tool_version, cfg.data_source, datetime.datetime.now()
-		report_attribution))
+		report_attribution)
 
 	cfg.cursor.execute(cache_projects_by_week)
 	cfg.db.commit()
@@ -661,7 +661,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		% (report_attribution,report_attribution,
 		report_date,report_date,
 		cfg.tool_source, cfg.tool_version, cfg.data_source, datetime.datetime.now()
-		report_attribution))
+		report_attribution)
 
 	cfg.cursor.execute(cache_projects_by_month)
 	cfg.db.commit()
@@ -698,7 +698,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		% (report_attribution,report_attribution,
 		report_date,report_date,
 		cfg.tool_source, cfg.tool_version, cfg.data_source, datetime.datetime.now()
-		report_attribution))
+		report_attribution)
 
 	cfg.cursor.execute(cache_projects_by_year)
 	cfg.db.commit()
@@ -741,7 +741,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		% (report_attribution,report_attribution,
 		report_date,report_date,
 		cfg.tool_source, cfg.tool_version, cfg.data_source, datetime.datetime.now()
-		report_attribution))
+		report_attribution)
 
 	cfg.cursor.execute(cache_repos_by_week)
 	cfg.db.commit()
@@ -780,7 +780,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		% (report_attribution,report_attribution,
 		report_date,report_date,
 		cfg.tool_source, cfg.tool_version, cfg.data_source, datetime.datetime.now()
-		report_attribution))
+		report_attribution)
 
 	cfg.cursor.execute(cache_repos_by_month)
 	cfg.db.commit()
@@ -817,7 +817,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		% (report_attribution,report_attribution,
 		report_date,report_date,
 		cfg.tool_source, cfg.tool_version, cfg.data_source, datetime.datetime.now()
-		report_attribution))
+		report_attribution)
 
 	cfg.cursor.execute(cache_repos_by_year)
 	cfg.db.commit()
