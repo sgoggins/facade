@@ -557,7 +557,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		JOIN repo_groups p ON p.repo_group_id = r.repo_group_id 
 		WHERE a.cmt_author_affiliation = '(Unknown)' 
 		AND p.rg_recache = 1 
-		GROUP BY r.repo_group_id,a.cmt_author_email)
+		GROUP BY r.repo_group_id,a.cmt_author_email
 
 		""")
 
