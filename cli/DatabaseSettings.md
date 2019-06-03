@@ -38,7 +38,9 @@ net_write_timeout = 50000
 slave_net_timeout = 40000
 wait_timeout = 1500000
 # 128 Gigs of RAM on server. 
-innodb_buffer_pool_size = 107374182400
+# innodb_buffer_pool_size = 107374182400
+# or smaller server
+innodb_buffer_pool_size = 53687091200
 # Helps with sorting
 key_buffer              = 256M
 max_allowed_packet      = 16M
