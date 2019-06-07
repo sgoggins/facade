@@ -113,7 +113,7 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 			cmt_added,cmt_removed,cmt_whitespace, cmt_date_attempted, tool_source, tool_version, data_source, data_collection_date)
 			VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""" % (
 			repos_id,str(commit),filename,
-			author_name,author_email,discover_alias(author_email),author_date,
+			str(author_name),author_email,discover_alias(author_email),author_date,
 			committer_name,committer_email,discover_alias(committer_email),committer_date,
 			added,removed,whitespace, cfg.tool_source, committer_date, cfg.tool_version, cfg.data_source, datetime.datetime.now()))
 
