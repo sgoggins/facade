@@ -111,7 +111,7 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 			cmt_author_name,cmt_author_raw_email,cmt_author_email,cmt_author_date,
 			cmt_committer_name,cmt_committer_raw_email,cmt_committer_email,cmt_committer_date,
 			cmt_added,cmt_removed,cmt_whitespace, cmt_date_attempted, tool_source, tool_version, data_source, data_collection_date)
-			VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""" % (
+			VALUES (%s,%s::varchar,%s,%s::varchar,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""" % (
 			repos_id,str(commit),filename,
 			str(author_name),author_email,discover_alias(author_email),author_date,
 			committer_name,committer_email,discover_alias(committer_email),committer_date,
