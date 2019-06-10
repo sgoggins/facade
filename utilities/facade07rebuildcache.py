@@ -572,7 +572,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		a.cmt_committer_email, 
 		SPLIT_PART(a.cmt_committer_email,'@',2), 
 		SUM(a.cmt_added),
-		info.a, info.b, info.c, info.d
+		info.a, info.b, info.c
 		FROM (VALUES(%s,%s,%s)) info(a,b,c), 
 		commits a 
 		JOIN repo r ON r.repo_id = a.repo_id 
@@ -581,7 +581,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		AND p.rg_recache = 1 
 		GROUP BY r.repo_group_id,a.cmt_committer_email, info.a, info.b, info.c """)
 
-	cfg.cursor.execute(unknown_committers, (cfg.tool_source, cfg.tool_version, cfg.data_source, datetime.datetime.now()))
+	cfg.cursor.execute(unknown_committers, (cfg.tool_source, cfg.tool_version, cfg.data_source))
 	cfg.db.commit()
 
 	# Start caching by project
@@ -599,7 +599,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		SUM(a.cmt_whitespace) AS whitespace, 
 		COUNT(DISTINCT a.cmt_filename) AS files, 
 		COUNT(DISTINCT a.cmt_commit_hash) AS patches,
-		info.a, info.b, info.c, info.d
+		info.a, info.b, info.c
 		FROM (VALUES(%s,%s,%s)) info(a,b,c), 
 		commits a 
 		JOIN repo r ON r.repo_id = a.repo_id 
@@ -638,7 +638,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		SUM(a.cmt_whitespace) AS whitespace, 
 		COUNT(DISTINCT a.cmt_filename) AS files, 
 		COUNT(DISTINCT a.cmt_commit_hash) AS patches,
-		info.a, info.b, info.c, info.d
+		info.a, info.b, info.c
 		FROM (VALUES(%s,%s,%s)) info(a,b,c), 
 		commits a 
 		JOIN repo r ON r.repo_id = a.repo_id 
@@ -676,7 +676,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		SUM(a.cmt_whitespace) AS whitespace, 
 		COUNT(DISTINCT a.cmt_filename) AS files, 
 		COUNT(DISTINCT a.cmt_commit_hash) AS patches,
-		info.a, info.b, info.c, info.d
+		info.a, info.b, info.c
 		FROM (VALUES(%s,%s,%s)) info(a,b,c), 
 		commits a 
 		JOIN repo r ON r.repo_id = a.repo_id 
@@ -718,7 +718,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		SUM(a.cmt_whitespace) AS whitespace, 
 		COUNT(DISTINCT a.cmt_filename) AS files, 
 		COUNT(DISTINCT a.cmt_commit_hash) AS patches,
-		info.a, info.b, info.c, info.d
+		info.a, info.b, info.c
 		FROM (VALUES(%s,%s,%s)) info(a,b,c), 
 		commits a 
 		JOIN repo r ON r.repo_id = a.repo_id 
@@ -757,7 +757,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		SUM(a.cmt_whitespace) AS whitespace, 
 		COUNT(DISTINCT a.cmt_filename) AS files, 
 		COUNT(DISTINCT a.cmt_commit_hash) AS patches, 
-		info.a, info.b, info.c, info.d
+		info.a, info.b, info.c
 		FROM (VALUES(%s,%s,%s)) info(a,b,c), 
 		commits a 
 		JOIN repo r ON r.repo_id = a.repo_id 
@@ -795,7 +795,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		SUM(a.cmt_whitespace) AS whitespace, 
 		COUNT(DISTINCT a.cmt_filename) AS files, 
 		COUNT(DISTINCT a.cmt_commit_hash) AS patches, 
-		info.a, info.b, info.c, info.d
+		info.a, info.b, info.c
 		FROM (VALUES(%s,%s,%s)) info(a,b,c), 
 		commits a 
 		JOIN repo r ON r.repo_id = a.repo_id 
