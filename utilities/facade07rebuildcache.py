@@ -621,7 +621,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		r.repo_group_id, info.a, info.b, info.c"""
 		% (report_attribution,report_attribution,
 		report_date,report_date,
-		cfg.tool_source, cfg.tool_version, cfg.data_source, datetime.datetime.now(),
+		cfg.tool_source, cfg.tool_version, cfg.data_source,
 		report_attribution))
 
 	cfg.cursor.execute(cache_projects_by_week)
@@ -660,7 +660,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		r.repo_group_id, info.a, info.b, info.c"""
 		% (report_attribution,report_attribution,
 		report_date,report_date,
-		cfg.tool_source, cfg.tool_version, cfg.data_source, datetime.datetime.now(),
+		cfg.tool_source, cfg.tool_version, cfg.data_source,
 		report_attribution))
 
 	cfg.cursor.execute(cache_projects_by_month)
@@ -697,7 +697,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		r.repo_group_id, info.a, info.b, info.c"""
 		% (report_attribution,report_attribution,
 		report_date,report_date,
-		cfg.tool_source, cfg.tool_version, cfg.data_source, datetime.datetime.now(),
+		cfg.tool_source, cfg.tool_version, cfg.data_source,
 		report_attribution))
 
 	cfg.cursor.execute(cache_projects_by_year)
@@ -740,7 +740,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		a.repo_id, info.a, info.b, info.c"""
 		% (report_attribution,report_attribution,
 		report_date,report_date,
-		cfg.tool_source, cfg.tool_version, cfg.data_source, datetime.datetime.now(),
+		cfg.tool_source, cfg.tool_version, cfg.data_source,
 		report_attribution))
 
 	cfg.cursor.execute(cache_repos_by_week)
@@ -779,7 +779,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		a.repo_id, info.a, info.b, info.c"""
 		% (report_attribution,report_attribution,
 		report_date,report_date,
-		cfg.tool_source, cfg.tool_version, cfg.data_source, datetime.datetime.now(),
+		cfg.tool_source, cfg.tool_version, cfg.data_source,
 		report_attribution))
 
 	cfg.cursor.execute(cache_repos_by_month)
@@ -816,7 +816,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		a.repo_id, info.a, info.b, info.c"""
 		% (report_attribution,report_attribution,
 		report_date,report_date,
-		cfg.tool_source, cfg.tool_version, cfg.data_source, datetime.datetime.now(),
+		cfg.tool_source, cfg.tool_version, cfg.data_source,
 		report_attribution))
 
 	cfg.cursor.execute(cache_repos_by_year)
