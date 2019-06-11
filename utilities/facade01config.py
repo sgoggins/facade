@@ -58,7 +58,7 @@ class Config:
         self.db_people = None
 
         self.repo_base_directory = None
-        self.tool_source = "Facade-Augur" 
+        self.tool_source = "FacadeAugur" 
         self.tool_version = "0.1"
         self.data_source = "git_repository"
 

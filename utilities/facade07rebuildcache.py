@@ -606,8 +606,8 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		JOIN repo_groups p ON p.repo_group_id = r.repo_group_id 
 		LEFT JOIN exclude e ON 
 			(a.cmt_author_email = e.email 
-				"AND (e.projects_id = r.repo_group_id "
-					"OR e.projects_id = 0)) "
+				AND (e.projects_id = r.repo_group_id 
+					OR e.projects_id = 0)) 
 			OR (a.cmt_author_email LIKE CONCAT('%%',e.domain) 
 				AND (e.projects_id = r.repo_group_id 
 				OR e.projects_id = 0)) 
