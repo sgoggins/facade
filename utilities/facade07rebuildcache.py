@@ -696,9 +696,8 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		a.cmt_%s_email,
 		r.repo_group_id, info.a, info.b, info.c"""
 		% (report_attribution,report_attribution,
-		report_date,report_date,
-		cfg.tool_source, cfg.tool_version, cfg.data_source,
-		report_attribution))
+		report_date,
+		cfg.tool_source, cfg.tool_version, cfg.data_source, report_attribution))
 
 	cfg.cursor.execute(cache_projects_by_year)
 	cfg.db.commit()
@@ -815,7 +814,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
 		a.cmt_%s_email,
 		a.repo_id, info.a, info.b, info.c"""
 		% (report_attribution,report_attribution,
-		report_date,report_date,
+		report_date,
 		cfg.tool_source, cfg.tool_version, cfg.data_source,
 		report_attribution))
 
